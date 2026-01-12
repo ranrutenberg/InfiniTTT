@@ -1,0 +1,21 @@
+# Build directory
+build/
+
+# VS Code settings (optional - you can track these if you want)
+.vscode/
+
+# KDevelop files
+.kdev4/
+*.kdev4
+
+# Compiled binaries
+*.o
+*.out
+tictactoe
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+compile_commands.json
