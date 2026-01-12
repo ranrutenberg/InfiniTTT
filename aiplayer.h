@@ -37,4 +37,12 @@ public:
     std::pair<int, int> findBestMove(const TicTacToeBoard& board, char playerMark) override;
 };
 
+// Random AI implementation - picks random adjacent moves
+class RandomAI : public AIPlayer {
+public:
+    RandomAI() = default;
+
+    std::pair<int, int> findBestMove(const TicTacToeBoard& board, char playerMark) override;
+};
+
 #endif // AIPLAYER_H

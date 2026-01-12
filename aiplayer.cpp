@@ -47,7 +47,7 @@ static bool checkWinQuiet(const TicTacToeBoard& board, char mark, int length = 5
 
         int x = pos.first, y = pos.second;
 
-        // Check all 4 directions
+        // Check all 4 directions (horizontal, vertical, diagonal \, diagonal /)
         int directions[4][2] = {{1, 0}, {0, 1}, {1, 1}, {1, -1}};
 
         for (auto& dir : directions) {
@@ -57,6 +57,18 @@ static bool checkWinQuiet(const TicTacToeBoard& board, char mark, int length = 5
             for (int k = 1; k < length; ++k) {
                 int nx = x + k * dir[0];
                 int ny = y + k * dir[1];
+                if (board.isPositionOccupied(nx, ny) &&
+                    occupiedPositions.at({nx, ny}) == mark) {
+                    count++;
+                } else {
+                    break;
+                }
+            }
+
+            // Check in negative direction
+            for (int k = 1; k < length; ++k) {
+                int nx = x - k * dir[0];
+                int ny = y - k * dir[1];
                 if (board.isPositionOccupied(nx, ny) &&
                     occupiedPositions.at({nx, ny}) == mark) {
                     count++;
@@ -148,7 +160,7 @@ std::pair<int, int> MinimaxAI::findBestMove(const TicTacToeBoard& board, char pl
     TicTacToeBoard boardCopy = board;
 
     int bestValue = std::numeric_limits<int>::min();
-    std::pair<int, int> bestMove = {0, 0};
+    std::vector<std::pair<int, int>> bestMoves;  // Store all moves with best score
 
     char humanMark = (playerMark == 'X') ? 'O' : 'X';
     auto startTime = std::chrono::high_resolution_clock::now();
@@ -168,10 +180,44 @@ std::pair<int, int> MinimaxAI::findBestMove(const TicTacToeBoard& board, char pl
         boardCopy.removeMarkDirect(i, j);
 
         if (moveValue > bestValue) {
-            bestMove = {i, j};
             bestValue = moveValue;
+            bestMoves.clear();
+            bestMoves.push_back({i, j});
+        } else if (moveValue == bestValue) {
+            bestMoves.push_back({i, j});
         }
     }
 
-    return bestMove;
+    // Randomly select one of the best moves
+    if (bestMoves.empty()) {
+        return {0, 0};
+    }
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, bestMoves.size() - 1);
+
+    return bestMoves[dis(gen)];
+}
+
+// RandomAI implementation - picks a random adjacent move
+std::pair<int, int> RandomAI::findBestMove(const TicTacToeBoard& board, char playerMark) {
+    // If board is empty, make first move at origin
+    if (board.getOccupiedPositions().empty()) {
+        return {0, 0};
+    }
+
+    // Get all possible adjacent moves
+    auto moves = getAdjacentMoves(board);
+
+    if (moves.empty()) {
+        return {0, 0};
+    }
+
+    // Randomly select a move
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, moves.size() - 1);
+
+    return moves[dis(gen)];
 }
