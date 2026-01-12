@@ -1,0 +1,7 @@
+/home/ran/projects/tictactoe/build/CMakeFiles/tictactoe.dir
+/home/ran/projects/tictactoe/build/CMakeFiles/edit_cache.dir
+/home/ran/projects/tictactoe/build/CMakeFiles/rebuild_cache.dir
+/home/ran/projects/tictactoe/build/CMakeFiles/list_install_components.dir
+/home/ran/projects/tictactoe/build/CMakeFiles/install.dir
+/home/ran/projects/tictactoe/build/CMakeFiles/install/local.dir
+/home/ran/projects/tictactoe/build/CMakeFiles/install/strip.dir

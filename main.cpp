@@ -6,6 +6,7 @@
 #include <iostream>
 #include "tictactoeboard.h" // Include the TicTacToeBoard class
 #include "aiplayer.h"       // Include the AIPlayer class
+//TODO: move from headers to modules
 
 enum class PlayerType {
     HUMAN,
@@ -14,6 +15,10 @@ enum class PlayerType {
 
 int main() {
     TicTacToeBoard game;
+    // Coordinates for player moves on the infinite board
+    // x: horizontal position (column), y: vertical position (row)
+    // Can be any integer (positive, negative, or zero) to support infinite board
+    // TODO: this basically adds a limit to the "infinite" board based on int range. What should we do if we reach that limit?
     int x, y;
     const int winningLength = 5;
     bool gameWon = false;

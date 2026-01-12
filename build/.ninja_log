@@ -1,0 +1,16 @@
+# ninja log v7
+1	244	1768048416197447191	CMakeFiles/tictactoe.dir/tictactoeboard.cpp.o	cc5a1a314d08b680
+1	228	1768048433158008192	CMakeFiles/tictactoe.dir/main.cpp.o	efc2a5862b075ef5
+1	379	1768048433163214087	CMakeFiles/tictactoe.dir/aiplayer.cpp.o	a8240f8bf10cb3e4
+379	421	1768048433539264706	tictactoe	23fb0bad23a1fd4e
+2	234	1768051665887640740	CMakeFiles/tictactoe.dir/main.cpp.o	efc2a5862b075ef5
+234	283	1768051666122206810	tictactoe	23fb0bad23a1fd4e
+2	304	1768052015915549760	CMakeFiles/tictactoe.dir/tictactoeboard.cpp.o	cc5a1a314d08b680
+304	346	1768052016219215888	tictactoe	23fb0bad23a1fd4e
+2	237	1768052163073822091	CMakeFiles/tictactoe.dir/main.cpp.o	efc2a5862b075ef5
+2	447	1768052163077901075	CMakeFiles/tictactoe.dir/aiplayer.cpp.o	a8240f8bf10cb3e4
+447	490	1768052163520260570	tictactoe	23fb0bad23a1fd4e
+1	240	1768065951906705759	CMakeFiles/tictactoe.dir/main.cpp.o	efc2a5862b075ef5
+1	376	1768065951910398870	CMakeFiles/tictactoe.dir/tictactoeboard.cpp.o	cc5a1a314d08b680
+2	466	1768065951910743283	CMakeFiles/tictactoe.dir/aiplayer.cpp.o	a8240f8bf10cb3e4
+466	510	1768065952373448329	tictactoe	23fb0bad23a1fd4e
