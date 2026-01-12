@@ -1,1 +1,0 @@
-/usr/bin/c++ -rdynamic -Wl,--dependency-file=CMakeFiles/tictactoe.dir/link.d CMakeFiles/tictactoe.dir/main.cpp.o CMakeFiles/tictactoe.dir/tictactoeboard.cpp.o CMakeFiles/tictactoe.dir/aiplayer.cpp.o -o tictactoe
