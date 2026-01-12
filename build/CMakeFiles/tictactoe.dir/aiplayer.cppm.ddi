@@ -1,0 +1,20 @@
+{
+"rules": [
+{
+"primary-output": "CMakeFiles/tictactoe.dir/aiplayer.cppm.o",
+"provides": [
+{
+"logical-name": "aiplayer",
+"is-interface": true
+}
+],
+"requires": [
+{
+"logical-name": "tictactoeboard"
+}
+]
+}
+],
+"version": 0,
+"revision": 0
+}

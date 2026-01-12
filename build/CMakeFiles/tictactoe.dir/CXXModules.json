@@ -1,0 +1,35 @@
+{
+	"modules" : 
+	{
+		"aiplayer" : 
+		{
+			"bmi" : "/home/ran/projects/tictactoe/build/CMakeFiles/tictactoe.dir/aiplayer.gcm",
+			"is-private" : false
+		},
+		"tictactoeboard" : 
+		{
+			"bmi" : "/home/ran/projects/tictactoe/build/CMakeFiles/tictactoe.dir/tictactoeboard.gcm",
+			"is-private" : false
+		}
+	},
+	"references" : 
+	{
+		"aiplayer" : 
+		{
+			"lookup-method" : "by-name",
+			"path" : "CMakeFiles/tictactoe.dir/aiplayer.gcm"
+		},
+		"tictactoeboard" : 
+		{
+			"lookup-method" : "by-name",
+			"path" : "CMakeFiles/tictactoe.dir/tictactoeboard.gcm"
+		}
+	},
+	"usages" : 
+	{
+		"aiplayer" : 
+		[
+			"tictactoeboard"
+		]
+	}
+}

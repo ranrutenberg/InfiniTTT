@@ -1,0 +1,18 @@
+{
+"rules": [
+{
+"primary-output": "CMakeFiles/tictactoe.dir/main.cpp.o",
+"requires": [
+{
+"logical-name": "aiplayer"
+}
+,
+{
+"logical-name": "tictactoeboard"
+}
+]
+}
+],
+"version": 0,
+"revision": 0
+}

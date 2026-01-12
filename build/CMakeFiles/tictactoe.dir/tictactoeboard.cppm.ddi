@@ -1,0 +1,17 @@
+{
+"rules": [
+{
+"primary-output": "CMakeFiles/tictactoe.dir/tictactoeboard.cppm.o",
+"provides": [
+{
+"logical-name": "tictactoeboard",
+"is-interface": true
+}
+],
+"requires": [
+]
+}
+],
+"version": 0,
+"revision": 0
+}

@@ -4,9 +4,9 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 #include <iostream>
-#include "tictactoeboard.h" // Include the TicTacToeBoard class
-#include "aiplayer.h"       // Include the AIPlayer class
-//TODO: move from headers to modules
+
+import tictactoeboard;
+import aiplayer;
 
 enum class PlayerType {
     HUMAN,
