@@ -16,7 +16,8 @@ enum class PlayerType {
 
 enum class AIType {
     MINIMAX,
-    RANDOM
+    RANDOM,
+    SMART_RANDOM
 };
 
 // Function to create AI instance based on type
@@ -26,6 +27,8 @@ AIPlayer* createAI(AIType type) {
             return new MinimaxAI(100, 3);
         case AIType::RANDOM:
             return new RandomAI();
+        case AIType::SMART_RANDOM:
+            return new SmartRandomAI(1);  // Level 1 optimization
         default:
             return new RandomAI();
     }
@@ -38,6 +41,8 @@ const char* getAITypeName(AIType type) {
             return "Minimax";
         case AIType::RANDOM:
             return "Random";
+        case AIType::SMART_RANDOM:
+            return "Smart Random";
         default:
             return "Unknown";
     }
@@ -105,11 +110,14 @@ AIType selectAIType(const std::string& playerName) {
     std::cout << "\nSelect " << playerName << " AI type:\n";
     std::cout << "1. Minimax (Strategic)\n";
     std::cout << "2. Random\n";
-    std::cout << "Enter choice (1-2): ";
+    std::cout << "3. Smart Random (Random + Win Detection)\n";
+    std::cout << "Enter choice (1-3): ";
     int choice;
     std::cin >> choice;
 
-    return (choice == 2) ? AIType::RANDOM : AIType::MINIMAX;
+    if (choice == 2) return AIType::RANDOM;
+    if (choice == 3) return AIType::SMART_RANDOM;
+    return AIType::MINIMAX;
 }
 
 // Structure to hold benchmark statistics
@@ -202,8 +210,8 @@ void runBenchmark(int numGames, bool interactive) {
         }
     } else {
         // Run all matchups
-        AIType aiTypes[] = {AIType::MINIMAX, AIType::RANDOM};
-        int numTypes = 2;
+        AIType aiTypes[] = {AIType::MINIMAX, AIType::RANDOM, AIType::SMART_RANDOM};
+        int numTypes = 3;
 
         std::cout << "Running " << numGames << " games for each matchup...\n\n";
 
@@ -333,26 +341,30 @@ void runInteractiveGame() {
     std::cout << "1. Human\n";
     std::cout << "2. AI (Minimax)\n";
     std::cout << "3. AI (Random)\n";
-    std::cout << "Enter choice (1-3): ";
+    std::cout << "4. AI (Smart Random)\n";
+    std::cout << "Enter choice (1-4): ";
     int choice1;
     std::cin >> choice1;
 
     PlayerType player1Type = (choice1 == 1) ? PlayerType::HUMAN : PlayerType::AI;
     AIType ai1Type = AIType::MINIMAX;  // Default
     if (choice1 == 3) ai1Type = AIType::RANDOM;
+    if (choice1 == 4) ai1Type = AIType::SMART_RANDOM;
 
     // Configure Player 2 (O)
     std::cout << "\nPlayer 2 (O) - Select type:\n";
     std::cout << "1. Human\n";
     std::cout << "2. AI (Minimax)\n";
     std::cout << "3. AI (Random)\n";
-    std::cout << "Enter choice (1-3): ";
+    std::cout << "4. AI (Smart Random)\n";
+    std::cout << "Enter choice (1-4): ";
     int choice2;
     std::cin >> choice2;
 
     PlayerType player2Type = (choice2 == 1) ? PlayerType::HUMAN : PlayerType::AI;
     AIType ai2Type = AIType::MINIMAX;  // Default
     if (choice2 == 3) ai2Type = AIType::RANDOM;
+    if (choice2 == 4) ai2Type = AIType::SMART_RANDOM;
 
     // Create AI instances if needed
     AIPlayer* ai1 = (player1Type == PlayerType::AI) ? createAI(ai1Type) : nullptr;
