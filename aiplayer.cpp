@@ -13,12 +13,11 @@
 #include <set>
 #include <algorithm>
 
-// Helper function to get all valid adjacent moves (deduplicated)
-static std::vector<std::pair<int, int>> getAdjacentMoves(const TicTacToeBoard& board) {
+// Helper function to compute all valid adjacent moves from scratch
+// Used during minimax recursion where we don't maintain a state
+static std::vector<std::pair<int, int>> computeAdjacentMoves(const TicTacToeBoard& board) {
     std::vector<std::pair<int, int>> moves;
     auto occupiedPositions = board.getOccupiedPositions();
-
-    // Use a set to deduplicate positions
     std::set<std::pair<int, int>> uniquePositions;
 
     for (const auto& [pos, mark] : occupiedPositions) {
@@ -36,6 +35,28 @@ static std::vector<std::pair<int, int>> getAdjacentMoves(const TicTacToeBoard& b
 
     moves.assign(uniquePositions.begin(), uniquePositions.end());
     return moves;
+}
+
+// Helper function to update available moves after a move
+// Removes the played position and adds adjacent empty positions
+static void updateAvailableMoves(std::set<std::pair<int, int>>& availableMoves,
+                                  const TicTacToeBoard& board,
+                                  int moveX, int moveY) {
+    // Remove the position that was just played
+    availableMoves.erase({moveX, moveY});
+
+    // Check all positions adjacent to the move and add empty ones
+    for (int i = moveX - 1; i <= moveX + 1; ++i) {
+        for (int j = moveY - 1; j <= moveY + 1; ++j) {
+            // Skip if this is the move itself
+            if (i == moveX && j == moveY) continue;
+
+            // Add if not occupied
+            if (!board.isPositionOccupied(i, j)) {
+                availableMoves.insert({i, j});
+            }
+        }
+    }
 }
 
 // Helper function to check if a player has won (without printing)
@@ -110,8 +131,8 @@ int MinimaxAI::minimax(TicTacToeBoard& board, int depth, bool isMaximizing,
         return 0;  // Neutral evaluation
     }
 
-    // Get all possible moves
-    auto moves = getAdjacentMoves(board);
+    // Get all possible moves (compute from board during minimax search)
+    auto moves = computeAdjacentMoves(board);
 
     if (moves.empty()) {
         return 0;  // Draw - no moves available
@@ -155,7 +176,8 @@ int MinimaxAI::minimax(TicTacToeBoard& board, int depth, bool isMaximizing,
 }
 
 // Find the best move using minimax
-std::pair<int, int> MinimaxAI::findBestMove(const TicTacToeBoard& board, char playerMark) {
+std::pair<int, int> MinimaxAI::findBestMove(const TicTacToeBoard& board, char playerMark,
+                                             std::pair<int, int> lastMove) {
     // Create a mutable copy for simulation
     TicTacToeBoard boardCopy = board;
 
@@ -165,13 +187,34 @@ std::pair<int, int> MinimaxAI::findBestMove(const TicTacToeBoard& board, char pl
     char humanMark = (playerMark == 'X') ? 'O' : 'X';
     auto startTime = std::chrono::high_resolution_clock::now();
 
-    // If board is empty, make first move at origin
+    // If board is empty, initialize available moves with origin and return it
     if (boardCopy.getOccupiedPositions().empty()) {
+        availableMoves.clear();
+        availableMoves.insert({0, 0});
         return {0, 0};
     }
 
-    // Get all possible moves using the helper function
-    auto moves = getAdjacentMoves(boardCopy);
+    // Update internal available moves based on lastMove
+    if (lastMove.first != INT_MIN && lastMove.second != INT_MIN) {
+        updateAvailableMoves(availableMoves, boardCopy, lastMove.first, lastMove.second);
+    } else if (availableMoves.empty()) {
+        // First call - compute from board
+        auto tempMoves = computeAdjacentMoves(boardCopy);
+        availableMoves.insert(tempMoves.begin(), tempMoves.end());
+    }
+
+    // Filter out any occupied positions that may have accumulated
+    auto it = availableMoves.begin();
+    while (it != availableMoves.end()) {
+        if (boardCopy.isPositionOccupied(it->first, it->second)) {
+            it = availableMoves.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    // Convert available moves set to vector for iteration
+    std::vector<std::pair<int, int>> moves(availableMoves.begin(), availableMoves.end());
 
     for (const auto& [i, j] : moves) {
         boardCopy.placeMarkDirect(i, j, playerMark);
@@ -197,27 +240,78 @@ std::pair<int, int> MinimaxAI::findBestMove(const TicTacToeBoard& board, char pl
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(0, bestMoves.size() - 1);
 
-    return bestMoves[dis(gen)];
+    auto chosenMove = bestMoves[dis(gen)];
+
+    // Update internal available moves with our chosen move
+    // Remove the chosen position
+    availableMoves.erase(chosenMove);
+
+    // Add adjacent positions (will be filtered on next call when opponent's move is placed)
+    for (int i = chosenMove.first - 1; i <= chosenMove.first + 1; ++i) {
+        for (int j = chosenMove.second - 1; j <= chosenMove.second + 1; ++j) {
+            if (i == chosenMove.first && j == chosenMove.second) continue;
+            // Don't check if occupied - will be filtered on next call with updated board
+            availableMoves.insert({i, j});
+        }
+    }
+
+    return chosenMove;
 }
 
 // RandomAI implementation - picks a random adjacent move
-std::pair<int, int> RandomAI::findBestMove(const TicTacToeBoard& board, char playerMark) {
-    // If board is empty, make first move at origin
+std::pair<int, int> RandomAI::findBestMove(const TicTacToeBoard& board, char playerMark,
+                                            std::pair<int, int> lastMove) {
+    // If board is empty, initialize available moves with origin and return it
     if (board.getOccupiedPositions().empty()) {
+        availableMoves.clear();
+        availableMoves.insert({0, 0});
         return {0, 0};
     }
 
-    // Get all possible adjacent moves
-    auto moves = getAdjacentMoves(board);
+    // Update internal available moves based on lastMove
+    if (lastMove.first != INT_MIN && lastMove.second != INT_MIN) {
+        updateAvailableMoves(availableMoves, board, lastMove.first, lastMove.second);
+    } else if (availableMoves.empty()) {
+        // First call - compute from board
+        auto tempMoves = computeAdjacentMoves(board);
+        availableMoves.insert(tempMoves.begin(), tempMoves.end());
+    }
 
-    if (moves.empty()) {
+    // Filter out any occupied positions that may have accumulated
+    auto it = availableMoves.begin();
+    while (it != availableMoves.end()) {
+        if (board.isPositionOccupied(it->first, it->second)) {
+            it = availableMoves.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    if (availableMoves.empty()) {
         return {0, 0};
     }
 
-    // Randomly select a move
+    // Randomly select a move from available moves
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(0, moves.size() - 1);
+    std::uniform_int_distribution<> dis(0, availableMoves.size() - 1);
 
-    return moves[dis(gen)];
+    auto iter = availableMoves.begin();
+    std::advance(iter, dis(gen));
+    auto chosenMove = *iter;
+
+    // Update internal available moves with our chosen move
+    // Remove the chosen position
+    availableMoves.erase(chosenMove);
+
+    // Add adjacent positions (will be filtered on next call when opponent's move is placed)
+    for (int i = chosenMove.first - 1; i <= chosenMove.first + 1; ++i) {
+        for (int j = chosenMove.second - 1; j <= chosenMove.second + 1; ++j) {
+            if (i == chosenMove.first && j == chosenMove.second) continue;
+            // Don't check if occupied - will be filtered on next call with updated board
+            availableMoves.insert({i, j});
+        }
+    }
+
+    return chosenMove;
 }

@@ -8,6 +8,8 @@
 
 #include <utility>
 #include <chrono>
+#include <climits>
+#include <set>
 
 class TicTacToeBoard;
 
@@ -17,7 +19,10 @@ public:
     virtual ~AIPlayer() = default;
 
     // Find and return the best move for the current board state
-    virtual std::pair<int, int> findBestMove(const TicTacToeBoard& board, char playerMark) = 0;
+    // lastMove: the last move made by the opponent (x, y coordinates)
+    //           Use {INT_MIN, INT_MIN} to indicate no last move (first move of game)
+    virtual std::pair<int, int> findBestMove(const TicTacToeBoard& board, char playerMark,
+                                              std::pair<int, int> lastMove = {INT_MIN, INT_MIN}) = 0;
 };
 
 // Minimax-based AI implementation
@@ -25,6 +30,7 @@ class MinimaxAI : public AIPlayer {
 private:
     int timeLimitMs;
     int maxDepth;
+    std::set<std::pair<int, int>> availableMoves;  // Maintained internally by AI
 
     int minimax(TicTacToeBoard& board, int depth, bool isMaximizing,
                 char computerMark, char humanMark, int timeLimitMs,
@@ -34,15 +40,20 @@ private:
 public:
     MinimaxAI(int timeLimit = 100, int depth = 3) : timeLimitMs(timeLimit), maxDepth(depth) {}
 
-    std::pair<int, int> findBestMove(const TicTacToeBoard& board, char playerMark) override;
+    std::pair<int, int> findBestMove(const TicTacToeBoard& board, char playerMark,
+                                      std::pair<int, int> lastMove = {INT_MIN, INT_MIN}) override;
 };
 
 // Random AI implementation - picks random adjacent moves
 class RandomAI : public AIPlayer {
+private:
+    std::set<std::pair<int, int>> availableMoves;  // Maintained internally by AI
+
 public:
     RandomAI() = default;
 
-    std::pair<int, int> findBestMove(const TicTacToeBoard& board, char playerMark) override;
+    std::pair<int, int> findBestMove(const TicTacToeBoard& board, char playerMark,
+                                      std::pair<int, int> lastMove = {INT_MIN, INT_MIN}) override;
 };
 
 #endif // AIPLAYER_H

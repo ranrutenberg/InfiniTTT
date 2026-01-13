@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <climits>
 #include "tictactoeboard.h" // Include the TicTacToeBoard class
 #include "aiplayer.h"       // Include the AIPlayer class
 
@@ -56,6 +57,7 @@ char runSingleGame(AIType ai1Type, AIType ai2Type, bool quiet = false) {
     const char player1Mark = 'X';
     const char player2Mark = 'O';
     bool isPlayer1Turn = true;
+    std::pair<int, int> lastMove = {INT_MIN, INT_MIN};  // Track opponent's last move
 
     while (moveCount < maxMoves) {
         if (!quiet) {
@@ -65,7 +67,7 @@ char runSingleGame(AIType ai1Type, AIType ai2Type, bool quiet = false) {
         char currentMark = isPlayer1Turn ? player1Mark : player2Mark;
         AIPlayer* currentAI = isPlayer1Turn ? ai1 : ai2;
 
-        auto [moveX, moveY] = currentAI->findBestMove(game, currentMark);
+        auto [moveX, moveY] = currentAI->findBestMove(game, currentMark, lastMove);
 
         if (!game.placeMark(moveX, moveY)) {
             if (!quiet) {
@@ -77,6 +79,8 @@ char runSingleGame(AIType ai1Type, AIType ai2Type, bool quiet = false) {
         if (!quiet) {
             std::cout << "Player " << currentMark << " played at (" << moveX << ", " << moveY << ")\n";
         }
+
+        lastMove = {moveX, moveY};  // Update last move for next player
 
         if (game.checkWin(winningLength)) {
             if (!quiet) {
@@ -150,17 +154,19 @@ std::pair<char, int> runSingleGameWithStats(AIType ai1Type, AIType ai2Type) {
     const char player1Mark = 'X';
     const char player2Mark = 'O';
     bool isPlayer1Turn = true;
+    std::pair<int, int> lastMove = {INT_MIN, INT_MIN};  // Track opponent's last move
 
     while (moveCount < maxMoves) {
         char currentMark = isPlayer1Turn ? player1Mark : player2Mark;
         AIPlayer* currentAI = isPlayer1Turn ? ai1 : ai2;
 
-        auto [moveX, moveY] = currentAI->findBestMove(game, currentMark);
+        auto [moveX, moveY] = currentAI->findBestMove(game, currentMark, lastMove);
 
         if (!game.placeMark(moveX, moveY)) {
             break;
         }
 
+        lastMove = {moveX, moveY};  // Update last move for next player
         moveCount++;
 
         if (checkWinSilent(game, winningLength)) {
@@ -355,6 +361,7 @@ void runInteractiveGame() {
     const char player1Mark = 'X';
     const char player2Mark = 'O';
     bool isPlayer1Turn = true;
+    std::pair<int, int> lastMove = {INT_MIN, INT_MIN};  // Track opponent's last move
 
     std::cout << "\nGame Configuration:\n";
     std::cout << "Player 1 (X): ";
@@ -388,6 +395,7 @@ void runInteractiveGame() {
 
             // Attempt to place the mark; if invalid, prompt again
             if (game.placeMark(x, y)) {
+                lastMove = {x, y};  // Update last move for AI
                 gameWon = game.checkWin(winningLength);
                 isPlayer1Turn = !isPlayer1Turn;  // Switch players
             } else {
@@ -397,10 +405,11 @@ void runInteractiveGame() {
             // AI player's turn
             AIType currentAIType = isPlayer1Turn ? ai1Type : ai2Type;
             std::cout << "Player " << currentMark << " (" << getAITypeName(currentAIType) << ") is making a move...\n";
-            auto [moveX, moveY] = currentAI->findBestMove(game, currentMark);
+            auto [moveX, moveY] = currentAI->findBestMove(game, currentMark, lastMove);
 
             if (game.placeMark(moveX, moveY)) {
                 std::cout << "AI played at (" << moveX << ", " << moveY << ")\n";
+                lastMove = {moveX, moveY};  // Update last move for next player
                 gameWon = game.checkWin(winningLength);
                 isPlayer1Turn = !isPlayer1Turn;  // Switch players
             } else {
