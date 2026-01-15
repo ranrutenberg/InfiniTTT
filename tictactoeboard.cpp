@@ -108,16 +108,17 @@ bool TicTacToeBoard::checkWin ( int length ) const
 }
 
     // Evaluate board position by counting potential winning sequences
-    // Returns a score based on the number and quality of sequences
+    // Returns a score based on the number and quality of sequences, including gapped patterns
 int TicTacToeBoard::evaluatePosition(char mark) const
 {
     int score = 0;
     char opponent = (mark == 'X') ? 'O' : 'X';
-    std::set<std::pair<std::pair<int, int>, std::pair<int, int>>> countedSequences;
+    std::set<std::pair<std::pair<int, int>, std::pair<int, int>>> countedWindows;
 
     // Directions: horizontal, vertical, diagonal \, diagonal /
     int directions[4][2] = {{1, 0}, {0, 1}, {1, 1}, {1, -1}};
 
+    // For each occupied position of our mark, examine 5-cell windows in all directions
     for (const auto& [pos, m] : board) {
         if (m != mark) continue;
 
@@ -127,92 +128,88 @@ int TicTacToeBoard::evaluatePosition(char mark) const
             int dx = directions[d][0];
             int dy = directions[d][1];
 
-            // Count consecutive pieces in both directions from this position
-            int count = 1;  // Count this position
-            int minX = x, minY = y, maxX = x, maxY = y;
+            // Try different starting positions for 5-cell windows containing this piece
+            // We want to check windows where this piece is at positions 0, 1, 2, 3, or 4
+            for (int offset = 0; offset < 5; ++offset) {
+                // Calculate window start position
+                int startX = x - offset * dx;
+                int startY = y - offset * dy;
+                int endX = startX + 4 * dx;
+                int endY = startY + 4 * dy;
 
-            // Count in positive direction
-            for (int k = 1; k < 5; ++k) {
-                int nx = x + k * dx;
-                int ny = y + k * dy;
-                if (board.count({nx, ny}) > 0 && board.at({nx, ny}) == mark) {
-                    count++;
-                    maxX = nx;
-                    maxY = ny;
-                } else {
-                    break;
+                // Create canonical key (always store min to max)
+                std::pair<std::pair<int, int>, std::pair<int, int>> windowKey =
+                    {{startX, startY}, {endX, endY}};
+
+                // Skip if already evaluated this window
+                if (countedWindows.count(windowKey) > 0) continue;
+                countedWindows.insert(windowKey);
+
+                // Analyze this 5-cell window
+                int friendlyCount = 0;
+                int opponentCount = 0;
+                int emptyCount = 0;
+
+                for (int k = 0; k < 5; ++k) {
+                    int cellX = startX + k * dx;
+                    int cellY = startY + k * dy;
+
+                    if (board.count({cellX, cellY}) == 0) {
+                        emptyCount++;
+                    } else if (board.at({cellX, cellY}) == mark) {
+                        friendlyCount++;
+                    } else {
+                        opponentCount++;
+                    }
                 }
-            }
 
-            // Count in negative direction
-            for (int k = 1; k < 5; ++k) {
-                int nx = x - k * dx;
-                int ny = y - k * dy;
-                if (board.count({nx, ny}) > 0 && board.at({nx, ny}) == mark) {
-                    count++;
-                    minX = nx;
-                    minY = ny;
-                } else {
-                    break;
+                // If opponent has any pieces in this window, it's blocked - skip it
+                if (opponentCount > 0) continue;
+
+                // If we have less than 2 pieces in this window, it's not valuable
+                if (friendlyCount < 2) continue;
+
+                // Check if the ends are open (for extending beyond 5)
+                int beforeX = startX - dx;
+                int beforeY = startY - dy;
+                int afterX = endX + dx;
+                int afterY = endY + dy;
+
+                bool openBefore = (board.count({beforeX, beforeY}) == 0 ||
+                                  board.at({beforeX, beforeY}) != opponent);
+                bool openAfter = (board.count({afterX, afterY}) == 0 ||
+                                 board.at({afterX, afterY}) != opponent);
+
+                // Score based on pattern quality
+                int windowScore = 0;
+
+                if (friendlyCount == 4) {
+                    // 4 pieces in a 5-cell window - one move from winning
+                    // Patterns: XXXX_, XXX_X, XX_XX, X_XXX, _XXXX
+                    if (openBefore && openAfter) {
+                        windowScore = 500;  // Can complete in the gap or extend
+                    } else {
+                        windowScore = 200;  // Can still complete in the gap
+                    }
+                } else if (friendlyCount == 3) {
+                    // 3 pieces in a 5-cell window - building toward a win
+                    // Patterns: XXX__, XX_X_, XX__X, X_XX_, X_X_X, X__XX, etc.
+                    if (emptyCount == 2) {
+                        if (openBefore && openAfter) {
+                            windowScore = 50;  // Good potential, multiple ways to extend
+                        } else {
+                            windowScore = 20;  // Still useful
+                        }
+                    }
+                } else if (friendlyCount == 2) {
+                    // 2 pieces in a 5-cell window - early building
+                    if (emptyCount == 3 && openBefore && openAfter) {
+                        windowScore = 5;  // Minor value for positioning
+                    }
                 }
+
+                score += windowScore;
             }
-
-            // Skip if less than 3 in a row
-            if (count < 3) continue;
-
-            // Create a canonical representation of this sequence to avoid double counting
-            std::pair<std::pair<int, int>, std::pair<int, int>> sequenceKey =
-                {{minX, minY}, {maxX, maxY}};
-
-            // Skip if we've already counted this sequence
-            if (countedSequences.count(sequenceKey) > 0) continue;
-            countedSequences.insert(sequenceKey);
-
-            // Check openness - can this sequence extend to 5?
-            bool openStart = true, openEnd = true;
-
-            // Check if start is blocked
-            int startX = minX - dx;
-            int startY = minY - dy;
-            if (board.count({startX, startY}) > 0 && board.at({startX, startY}) == opponent) {
-                openStart = false;
-            }
-
-            // Check if end is blocked
-            int endX = maxX + dx;
-            int endY = maxY + dy;
-            if (board.count({endX, endY}) > 0 && board.at({endX, endY}) == opponent) {
-                openEnd = false;
-            }
-
-            // Calculate spaces needed to win
-            int spacesNeeded = 5 - count;
-
-            // If blocked on both ends and can't reach 5, skip
-            if (!openStart && !openEnd) continue;
-            if (openStart && !openEnd && spacesNeeded > 1) continue;  // Can only extend 1 in one direction
-            if (!openStart && openEnd && spacesNeeded > 1) continue;
-
-            // Calculate score for this sequence based on length and openness
-            int sequenceScore = 0;
-
-            if (count == 4) {
-                // 4 in a row - very valuable (one move from winning)
-                if (openStart && openEnd) {
-                    sequenceScore = 500;  // Can win on either end
-                } else if (openStart || openEnd) {
-                    sequenceScore = 200;  // Can win on one end
-                }
-            } else if (count == 3) {
-                // 3 in a row - valuable but less urgent
-                if (openStart && openEnd) {
-                    sequenceScore = 50;  // Can extend in both directions
-                } else if (openStart || openEnd) {
-                    sequenceScore = 10;  // Can extend in one direction
-                }
-            }
-
-            score += sequenceScore;
         }
     }
 
