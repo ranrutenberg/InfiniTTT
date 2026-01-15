@@ -27,6 +27,9 @@ public:
     void placeMarkDirect(int x, int y, char mark) { board[{x, y}] = mark; }
     void removeMarkDirect(int x, int y) { board.erase({x, y}); }
     char getCurrentPlayer() const { return currentPlayer; }
+
+    // Evaluate board position by counting potential winning sequences
+    int evaluatePosition(char mark) const;
 };
 
 #endif // TICTACTOEBOARD_H

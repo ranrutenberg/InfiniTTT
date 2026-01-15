@@ -7,6 +7,7 @@
 #include <iostream>
 #include <iomanip>
 #include <map>
+#include <set>
 #include <utility>
 #include <algorithm>
 #include <cmath>
@@ -104,4 +105,116 @@ bool TicTacToeBoard::checkWin ( int length ) const
         }
     }
     return false;
+}
+
+    // Evaluate board position by counting potential winning sequences
+    // Returns a score based on the number and quality of sequences
+int TicTacToeBoard::evaluatePosition(char mark) const
+{
+    int score = 0;
+    char opponent = (mark == 'X') ? 'O' : 'X';
+    std::set<std::pair<std::pair<int, int>, std::pair<int, int>>> countedSequences;
+
+    // Directions: horizontal, vertical, diagonal \, diagonal /
+    int directions[4][2] = {{1, 0}, {0, 1}, {1, 1}, {1, -1}};
+
+    for (const auto& [pos, m] : board) {
+        if (m != mark) continue;
+
+        int x = pos.first, y = pos.second;
+
+        for (int d = 0; d < 4; ++d) {
+            int dx = directions[d][0];
+            int dy = directions[d][1];
+
+            // Count consecutive pieces in both directions from this position
+            int count = 1;  // Count this position
+            int minX = x, minY = y, maxX = x, maxY = y;
+
+            // Count in positive direction
+            for (int k = 1; k < 5; ++k) {
+                int nx = x + k * dx;
+                int ny = y + k * dy;
+                if (board.count({nx, ny}) > 0 && board.at({nx, ny}) == mark) {
+                    count++;
+                    maxX = nx;
+                    maxY = ny;
+                } else {
+                    break;
+                }
+            }
+
+            // Count in negative direction
+            for (int k = 1; k < 5; ++k) {
+                int nx = x - k * dx;
+                int ny = y - k * dy;
+                if (board.count({nx, ny}) > 0 && board.at({nx, ny}) == mark) {
+                    count++;
+                    minX = nx;
+                    minY = ny;
+                } else {
+                    break;
+                }
+            }
+
+            // Skip if less than 3 in a row
+            if (count < 3) continue;
+
+            // Create a canonical representation of this sequence to avoid double counting
+            std::pair<std::pair<int, int>, std::pair<int, int>> sequenceKey =
+                {{minX, minY}, {maxX, maxY}};
+
+            // Skip if we've already counted this sequence
+            if (countedSequences.count(sequenceKey) > 0) continue;
+            countedSequences.insert(sequenceKey);
+
+            // Check openness - can this sequence extend to 5?
+            bool openStart = true, openEnd = true;
+
+            // Check if start is blocked
+            int startX = minX - dx;
+            int startY = minY - dy;
+            if (board.count({startX, startY}) > 0 && board.at({startX, startY}) == opponent) {
+                openStart = false;
+            }
+
+            // Check if end is blocked
+            int endX = maxX + dx;
+            int endY = maxY + dy;
+            if (board.count({endX, endY}) > 0 && board.at({endX, endY}) == opponent) {
+                openEnd = false;
+            }
+
+            // Calculate spaces needed to win
+            int spacesNeeded = 5 - count;
+
+            // If blocked on both ends and can't reach 5, skip
+            if (!openStart && !openEnd) continue;
+            if (openStart && !openEnd && spacesNeeded > 1) continue;  // Can only extend 1 in one direction
+            if (!openStart && openEnd && spacesNeeded > 1) continue;
+
+            // Calculate score for this sequence based on length and openness
+            int sequenceScore = 0;
+
+            if (count == 4) {
+                // 4 in a row - very valuable (one move from winning)
+                if (openStart && openEnd) {
+                    sequenceScore = 500;  // Can win on either end
+                } else if (openStart || openEnd) {
+                    sequenceScore = 200;  // Can win on one end
+                }
+            } else if (count == 3) {
+                // 3 in a row - valuable but less urgent
+                if (openStart && openEnd) {
+                    sequenceScore = 50;  // Can extend in both directions
+                } else if (openStart || openEnd) {
+                    sequenceScore = 10;  // Can extend in one direction
+                }
+            }
+
+            score += sequenceScore;
+        }
+    }
+
+    return score;
 }
