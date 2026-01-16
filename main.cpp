@@ -6,6 +6,7 @@
 #include <iostream>
 #include <iomanip>
 #include <climits>
+#include <memory>
 #include "tictactoeboard.h" // Include the TicTacToeBoard class
 #include "aiplayer.h"       // Include the AIPlayer class
 #include "weighttrainer.h"  // Include the weight training system
@@ -23,16 +24,16 @@ enum class AIType {
 };
 
 // Function to create AI instance based on type
-AIPlayer* createAI(AIType type) {
+std::unique_ptr<AIPlayer> createAI(AIType type) {
     switch (type) {
         case AIType::MINIMAX:
-            return new MinimaxAI(100, 3);
+            return std::make_unique<MinimaxAI>(100, 3);
         case AIType::RANDOM:
-            return new RandomAI();
+            return std::make_unique<RandomAI>();
         case AIType::SMART_RANDOM:
-            return new SmartRandomAI(1);  // Level 1 optimization
+            return std::make_unique<SmartRandomAI>(1);  // Level 1 optimization
         default:
-            return new RandomAI();
+            return std::make_unique<RandomAI>();
     }
 }
 
@@ -58,8 +59,8 @@ char runSingleGame(AIType ai1Type, AIType ai2Type, bool quiet = false) {
     const int maxMoves = 1000;  // Prevent infinite games
     int moveCount = 0;
 
-    AIPlayer* ai1 = createAI(ai1Type);
-    AIPlayer* ai2 = createAI(ai2Type);
+    auto ai1 = createAI(ai1Type);
+    auto ai2 = createAI(ai2Type);
 
     const char player1Mark = 'X';
     const char player2Mark = 'O';
@@ -72,7 +73,7 @@ char runSingleGame(AIType ai1Type, AIType ai2Type, bool quiet = false) {
         }
 
         char currentMark = isPlayer1Turn ? player1Mark : player2Mark;
-        AIPlayer* currentAI = isPlayer1Turn ? ai1 : ai2;
+        AIPlayer* currentAI = isPlayer1Turn ? ai1.get() : ai2.get();
 
         auto [moveX, moveY] = currentAI->findBestMove(game, currentMark, lastMove);
 
@@ -93,8 +94,6 @@ char runSingleGame(AIType ai1Type, AIType ai2Type, bool quiet = false) {
             if (!quiet) {
                 game.printBoard();
             }
-            delete ai1;
-            delete ai2;
             return currentMark;
         }
 
@@ -102,8 +101,6 @@ char runSingleGame(AIType ai1Type, AIType ai2Type, bool quiet = false) {
         moveCount++;
     }
 
-    delete ai1;
-    delete ai2;
     return 'D';  // Draw
 }
 
@@ -158,8 +155,8 @@ std::pair<char, int> runSingleGameWithStats(AIType ai1Type, AIType ai2Type) {
     const int maxMoves = 1000;
     int moveCount = 0;
 
-    AIPlayer* ai1 = createAI(ai1Type);
-    AIPlayer* ai2 = createAI(ai2Type);
+    auto ai1 = createAI(ai1Type);
+    auto ai2 = createAI(ai2Type);
 
     const char player1Mark = 'X';
     const char player2Mark = 'O';
@@ -168,7 +165,7 @@ std::pair<char, int> runSingleGameWithStats(AIType ai1Type, AIType ai2Type) {
 
     while (moveCount < maxMoves) {
         char currentMark = isPlayer1Turn ? player1Mark : player2Mark;
-        AIPlayer* currentAI = isPlayer1Turn ? ai1 : ai2;
+        AIPlayer* currentAI = isPlayer1Turn ? ai1.get() : ai2.get();
 
         auto [moveX, moveY] = currentAI->findBestMove(game, currentMark, lastMove);
 
@@ -180,16 +177,12 @@ std::pair<char, int> runSingleGameWithStats(AIType ai1Type, AIType ai2Type) {
         moveCount++;
 
         if (checkWinSilent(game, winningLength)) {
-            delete ai1;
-            delete ai2;
             return {currentMark, moveCount};
         }
 
         isPlayer1Turn = !isPlayer1Turn;
     }
 
-    delete ai1;
-    delete ai2;
     return {'D', moveCount};
 }
 
@@ -369,8 +362,8 @@ void runInteractiveGame() {
     if (choice2 == 4) ai2Type = AIType::SMART_RANDOM;
 
     // Create AI instances if needed
-    AIPlayer* ai1 = (player1Type == PlayerType::AI) ? createAI(ai1Type) : nullptr;
-    AIPlayer* ai2 = (player2Type == PlayerType::AI) ? createAI(ai2Type) : nullptr;
+    auto ai1 = (player1Type == PlayerType::AI) ? createAI(ai1Type) : nullptr;
+    auto ai2 = (player2Type == PlayerType::AI) ? createAI(ai2Type) : nullptr;
 
     const char player1Mark = 'X';
     const char player2Mark = 'O';
@@ -400,7 +393,7 @@ void runInteractiveGame() {
 
         PlayerType currentPlayerType = isPlayer1Turn ? player1Type : player2Type;
         char currentMark = isPlayer1Turn ? player1Mark : player2Mark;
-        AIPlayer* currentAI = isPlayer1Turn ? ai1 : ai2;
+        AIPlayer* currentAI = isPlayer1Turn ? ai1.get() : ai2.get();
 
         if (currentPlayerType == PlayerType::HUMAN) {
             // Human player's turn
@@ -435,10 +428,6 @@ void runInteractiveGame() {
 
     game.printBoard();
     std::cout << "Game over! Thanks for playing.\n";
-
-    // Clean up AI instances
-    delete ai1;
-    delete ai2;
 }
 
 // Run weight training mode
