@@ -6,6 +6,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_executable(tictactoe main.cpp tictactoeboard.cpp aiplayer.cpp weighttrainer.cpp)
+add_executable(InfiniTTT main.cpp tictactoeboard.cpp aiplayer.cpp weighttrainer.cpp)
 
-install(TARGETS tictactoe RUNTIME DESTINATION bin)
+install(TARGETS InfiniTTT RUNTIME DESTINATION bin)

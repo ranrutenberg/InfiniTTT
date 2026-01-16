@@ -7,6 +7,7 @@ build/
 # KDevelop files
 .kdev4/
 *.kdev4
+.kdevelop
 
 # Compiled binaries
 *.o
