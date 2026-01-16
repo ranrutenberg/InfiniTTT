@@ -480,18 +480,18 @@ int main(int argc, char* argv[]) {
     if (argc > 1 && (std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h")) {
         std::cout << "Infinite Tic-Tac-Toe - Usage:\n\n";
         std::cout << "Interactive mode (default):\n";
-        std::cout << "  ./tictactoe\n\n";
+        std::cout << "  ./InfiniTTT\n\n";
         std::cout << "Training mode:\n";
-        std::cout << "  ./tictactoe --train [generations] [population] [games_per_matchup]\n";
+        std::cout << "  ./InfiniTTT --train [generations] [population] [games_per_matchup]\n";
         std::cout << "  Arguments:\n";
         std::cout << "    generations        - Number of evolution cycles (default: 10)\n";
         std::cout << "    population         - Number of weight candidates (default: 20)\n";
         std::cout << "    games_per_matchup  - Games each pair plays (default: 6)\n";
-        std::cout << "  Example: ./tictactoe --train 5 10 4\n";
+        std::cout << "  Example: ./InfiniTTT --train 5 10 4\n";
         std::cout << "  Note: More games per matchup = more stable results but slower\n\n";
         std::cout << "Benchmark mode:\n";
-        std::cout << "  ./tictactoe --benchmark [num_games]\n";
-        std::cout << "  ./tictactoe --benchmark --all [num_games]\n\n";
+        std::cout << "  ./InfiniTTT --benchmark [num_games]\n";
+        std::cout << "  ./InfiniTTT --benchmark --all [num_games]\n\n";
         return 0;
     }
 
