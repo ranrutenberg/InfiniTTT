@@ -8,6 +8,8 @@
 #include <climits>
 #include "tictactoeboard.h" // Include the TicTacToeBoard class
 #include "aiplayer.h"       // Include the AIPlayer class
+#include "weighttrainer.h"  // Include the weight training system
+#include "evaluationweights.h"  // Include evaluation weights
 
 enum class PlayerType {
     HUMAN,
@@ -439,7 +441,86 @@ void runInteractiveGame() {
     delete ai2;
 }
 
+// Run weight training mode
+void runTraining(int generations, int populationSize, int gamesPerMatchup) {
+    std::cout << "=== AI Weight Training Mode ===\n\n";
+    std::cout << "Configuration:\n";
+    std::cout << "  Generations: " << generations << "\n";
+    std::cout << "  Population size: " << populationSize << "\n";
+    std::cout << "  Games per matchup: " << gamesPerMatchup << "\n";
+    std::cout << "  Estimated total games: " << (populationSize * (populationSize - 1) / 2 * gamesPerMatchup * generations) << "\n\n";
+
+    // Try to load existing weights as starting point
+    EvaluationWeights startingWeights;
+    if (startingWeights.loadFromFile("best_weights.txt")) {
+        std::cout << "Loaded existing weights from best_weights.txt\n";
+        startingWeights.print();
+    } else {
+        std::cout << "Using default weights as starting point\n";
+        startingWeights.print();
+    }
+    std::cout << "\n";
+
+    // Create trainer and run evolution
+    WeightTrainer trainer(populationSize, gamesPerMatchup, 100, 0.15);  // configurable games per matchup, max 100 moves
+    EvaluationWeights bestWeights = trainer.train(generations, startingWeights);
+
+    // Save best weights
+    if (bestWeights.saveToFile("best_weights.txt")) {
+        std::cout << "\nBest weights saved to best_weights.txt\n";
+    } else {
+        std::cout << "\nError: Could not save weights to file\n";
+    }
+
+    std::cout << "\nYou can now use these trained weights in games!\n";
+}
+
 int main(int argc, char* argv[]) {
+    // Check for help
+    if (argc > 1 && (std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h")) {
+        std::cout << "Infinite Tic-Tac-Toe - Usage:\n\n";
+        std::cout << "Interactive mode (default):\n";
+        std::cout << "  ./tictactoe\n\n";
+        std::cout << "Training mode:\n";
+        std::cout << "  ./tictactoe --train [generations] [population] [games_per_matchup]\n";
+        std::cout << "  Arguments:\n";
+        std::cout << "    generations        - Number of evolution cycles (default: 10)\n";
+        std::cout << "    population         - Number of weight candidates (default: 20)\n";
+        std::cout << "    games_per_matchup  - Games each pair plays (default: 6)\n";
+        std::cout << "  Example: ./tictactoe --train 5 10 4\n";
+        std::cout << "  Note: More games per matchup = more stable results but slower\n\n";
+        std::cout << "Benchmark mode:\n";
+        std::cout << "  ./tictactoe --benchmark [num_games]\n";
+        std::cout << "  ./tictactoe --benchmark --all [num_games]\n\n";
+        return 0;
+    }
+
+    // Check for training mode
+    if (argc > 1 && std::string(argv[1]) == "--train") {
+        int generations = 10;  // Default
+        int populationSize = 20;  // Default
+        int gamesPerMatchup = 6;  // Default - higher than 2 to reduce random effects
+
+        if (argc > 2) {
+            generations = std::atoi(argv[2]);
+        }
+        if (argc > 3) {
+            populationSize = std::atoi(argv[3]);
+        }
+        if (argc > 4) {
+            gamesPerMatchup = std::atoi(argv[4]);
+        }
+
+        // Validate parameters
+        if (generations < 1 || populationSize < 2 || gamesPerMatchup < 1) {
+            std::cerr << "Error: Invalid parameters. Use --help for usage.\n";
+            return 1;
+        }
+
+        runTraining(generations, populationSize, gamesPerMatchup);
+        return 0;
+    }
+
     // Check for benchmark mode
     if (argc > 1 && std::string(argv[1]) == "--benchmark") {
         int numGames = 50;  // Default

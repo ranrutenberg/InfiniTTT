@@ -10,6 +10,7 @@
 #include <chrono>
 #include <climits>
 #include <set>
+#include "evaluationweights.h"
 
 class TicTacToeBoard;
 
@@ -31,6 +32,7 @@ private:
     int timeLimitMs;
     int maxDepth;
     std::set<std::pair<int, int>> availableMoves;  // Maintained internally by AI
+    const EvaluationWeights* weights;  // Optional custom weights for learning
 
     int minimax(TicTacToeBoard& board, int depth, bool isMaximizing,
                 char computerMark, char humanMark, int timeLimitMs,
@@ -38,7 +40,8 @@ private:
                 int alpha, int beta);
 
 public:
-    MinimaxAI(int timeLimit = 100, int depth = 3) : timeLimitMs(timeLimit), maxDepth(depth) {}
+    MinimaxAI(int timeLimit = 100, int depth = 3, const EvaluationWeights* w = nullptr)
+        : timeLimitMs(timeLimit), maxDepth(depth), weights(w) {}
 
     std::pair<int, int> findBestMove(const TicTacToeBoard& board, char playerMark,
                                       std::pair<int, int> lastMove = {INT_MIN, INT_MIN}) override;
