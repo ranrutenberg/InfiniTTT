@@ -90,7 +90,7 @@ char runSingleGame(AIType ai1Type, AIType ai2Type, bool quiet = false) {
 
         lastMove = {moveX, moveY};  // Update last move for next player
 
-        if (game.checkWin(winningLength)) {
+        if (game.checkWin(moveX, moveY, winningLength)) {
             if (!quiet) {
                 game.printBoard();
             }
@@ -135,12 +135,12 @@ struct BenchmarkStats {
 };
 
 // Helper to check win without printing
-bool checkWinSilent(TicTacToeBoard& game, int winningLength) {
+bool checkWinSilent(TicTacToeBoard& game, int x, int y, int winningLength) {
     // Save cout state and redirect to null
     std::streambuf* oldCoutBuf = std::cout.rdbuf();
     std::cout.rdbuf(nullptr);
 
-    bool result = game.checkWin(winningLength);
+    bool result = game.checkWin(x, y, winningLength);
 
     // Restore cout
     std::cout.rdbuf(oldCoutBuf);
@@ -176,7 +176,7 @@ std::pair<char, int> runSingleGameWithStats(AIType ai1Type, AIType ai2Type) {
         lastMove = {moveX, moveY};  // Update last move for next player
         moveCount++;
 
-        if (checkWinSilent(game, winningLength)) {
+        if (checkWinSilent(game, moveX, moveY, winningLength)) {
             return {currentMark, moveCount};
         }
 
@@ -388,6 +388,14 @@ void runInteractiveGame() {
     std::cout << "The first player to align " << winningLength << " marks in any direction wins.\n";
     std::cout << "Enter coordinates in the format: x y\n\n";
 
+    // Automatically make first move at (0,0) if human is playing first
+    if (player1Type == PlayerType::HUMAN) {
+        game.placeMark(0, 0);
+        lastMove = {0, 0};
+        isPlayer1Turn = !isPlayer1Turn;  // Switch to player 2
+        std::cout << "First move automatically placed at (0, 0)\n\n";
+    }
+
     while (!gameWon) {
         game.printBoard();
 
@@ -403,7 +411,7 @@ void runInteractiveGame() {
             // Attempt to place the mark; if invalid, prompt again
             if (game.placeMark(x, y)) {
                 lastMove = {x, y};  // Update last move for AI
-                gameWon = game.checkWin(winningLength);
+                gameWon = game.checkWin(x, y, winningLength);
                 isPlayer1Turn = !isPlayer1Turn;  // Switch players
             } else {
                 std::cout << "Invalid move. Try again.\n";
@@ -417,7 +425,7 @@ void runInteractiveGame() {
             if (game.placeMark(moveX, moveY)) {
                 std::cout << "AI played at (" << moveX << ", " << moveY << ")\n";
                 lastMove = {moveX, moveY};  // Update last move for next player
-                gameWon = game.checkWin(winningLength);
+                gameWon = game.checkWin(moveX, moveY, winningLength);
                 isPlayer1Turn = !isPlayer1Turn;  // Switch players
             } else {
                 std::cout << "AI has no available moves.\n";

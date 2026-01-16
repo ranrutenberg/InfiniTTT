@@ -15,13 +15,15 @@ private:
     char currentPlayer;
 
     bool checkDirection(int x, int y, int dx, int dy, int length, char mark) const;
+    int countConsecutive(int x, int y, int dx, int dy, char mark) const;
+    bool checkWinFromPosition(int x, int y, int length, char mark) const;
 
 public:
     TicTacToeBoard() : currentPlayer('X') {}
     bool placeMark(int x, int y);
     void printBoard(int range = 3) const;
-    bool checkWin(int length) const;
-    bool checkWinQuiet(int length) const;
+    bool checkWin(int x, int y, int length) const;
+    bool checkWinQuiet(int x, int y, int length) const;
 
     // Helper methods for AI
     const std::map<std::pair<int, int>, char>& getOccupiedPositions() const { return board; }

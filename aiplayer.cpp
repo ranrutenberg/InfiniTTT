@@ -59,57 +59,11 @@ static void updateAvailableMoves(std::set<std::pair<int, int>>& availableMoves,
     }
 }
 
-// Helper function to check if a player has won (without printing)
-static bool checkWinQuiet(const TicTacToeBoard& board, char mark, int length = 5) {
-    auto occupiedPositions = board.getOccupiedPositions();
-
-    for (const auto& [pos, m] : occupiedPositions) {
-        if (m != mark) continue;
-
-        int x = pos.first, y = pos.second;
-
-        // Check all 4 directions (horizontal, vertical, diagonal \, diagonal /)
-        int directions[4][2] = {{1, 0}, {0, 1}, {1, 1}, {1, -1}};
-
-        for (auto& dir : directions) {
-            int count = 1;  // Count the starting position
-
-            // Check in positive direction
-            for (int k = 1; k < length; ++k) {
-                int nx = x + k * dir[0];
-                int ny = y + k * dir[1];
-                if (board.isPositionOccupied(nx, ny) &&
-                    occupiedPositions.at({nx, ny}) == mark) {
-                    count++;
-                } else {
-                    break;
-                }
-            }
-
-            // Check in negative direction
-            for (int k = 1; k < length; ++k) {
-                int nx = x - k * dir[0];
-                int ny = y - k * dir[1];
-                if (board.isPositionOccupied(nx, ny) &&
-                    occupiedPositions.at({nx, ny}) == mark) {
-                    count++;
-                } else {
-                    break;
-                }
-            }
-
-            if (count >= length) return true;
-        }
-    }
-
-    return false;
-}
-
 // Implementation of minimax algorithm with alpha-beta pruning
 int MinimaxAI::minimax(TicTacToeBoard& board, int depth, bool isMaximizing,
                        char computerMark, char humanMark, int timeLimitMs,
                        std::chrono::time_point<std::chrono::high_resolution_clock> startTime,
-                       int alpha, int beta) {
+                       int alpha, int beta, std::pair<int, int> lastMove) {
 
     // Check time limit early
     auto currentTime = std::chrono::high_resolution_clock::now();
@@ -118,12 +72,16 @@ int MinimaxAI::minimax(TicTacToeBoard& board, int depth, bool isMaximizing,
         return 0;  // Return neutral score if time limit reached
     }
 
-    // Check for terminal states
-    if (checkWinQuiet(board, computerMark)) {
-        return 1000 - depth;  // Prefer faster wins
-    }
-    if (checkWinQuiet(board, humanMark)) {
-        return -1000 + depth;  // Prefer slower losses
+    // Check for terminal states (if a move was just made)
+    if (lastMove.first != INT_MIN && lastMove.second != INT_MIN) {
+        if (board.checkWinQuiet(lastMove.first, lastMove.second, 5)) {
+            char lastMark = board.getOccupiedPositions().at(lastMove);
+            if (lastMark == computerMark) {
+                return 1000 - depth;  // Prefer faster wins
+            } else {
+                return -1000 + depth;  // Prefer slower losses
+            }
+        }
     }
 
     // Depth limit reached - evaluate position based on winning sequences
@@ -145,7 +103,7 @@ int MinimaxAI::minimax(TicTacToeBoard& board, int depth, bool isMaximizing,
 
         for (const auto& [i, j] : moves) {
             board.placeMarkDirect(i, j, computerMark);
-            int score = minimax(board, depth + 1, false, computerMark, humanMark, timeLimitMs, startTime, alpha, beta);
+            int score = minimax(board, depth + 1, false, computerMark, humanMark, timeLimitMs, startTime, alpha, beta, {i, j});
             board.removeMarkDirect(i, j);
 
             bestScore = std::max(bestScore, score);
@@ -162,7 +120,7 @@ int MinimaxAI::minimax(TicTacToeBoard& board, int depth, bool isMaximizing,
 
         for (const auto& [i, j] : moves) {
             board.placeMarkDirect(i, j, humanMark);
-            int score = minimax(board, depth + 1, true, computerMark, humanMark, timeLimitMs, startTime, alpha, beta);
+            int score = minimax(board, depth + 1, true, computerMark, humanMark, timeLimitMs, startTime, alpha, beta, {i, j});
             board.removeMarkDirect(i, j);
 
             bestScore = std::min(bestScore, score);
@@ -221,7 +179,7 @@ std::pair<int, int> MinimaxAI::findBestMove(const TicTacToeBoard& board, char pl
     for (const auto& [i, j] : moves) {
         boardCopy.placeMarkDirect(i, j, playerMark);
         int moveValue = minimax(boardCopy, 0, false, playerMark, humanMark, timeLimitMs, startTime,
-                               std::numeric_limits<int>::min(), std::numeric_limits<int>::max());
+                               std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), {i, j});
         boardCopy.removeMarkDirect(i, j);
 
         if (moveValue > bestValue) {
@@ -324,8 +282,8 @@ bool SmartRandomAI::isWinningMove(const TicTacToeBoard& board, int x, int y, cha
     TicTacToeBoard boardCopy = board;
     boardCopy.placeMarkDirect(x, y, playerMark);
 
-    // Check if this move creates a win using checkWinQuiet
-    bool wins = checkWinQuiet(boardCopy, playerMark, winLength);
+    // Check if this move creates a win using checkWinQuiet with the move position
+    bool wins = boardCopy.checkWinQuiet(x, y, winLength);
 
     return wins;
 }
