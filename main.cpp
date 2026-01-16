@@ -8,6 +8,8 @@
 #include <climits>
 #include "tictactoeboard.h" // Include the TicTacToeBoard class
 #include "aiplayer.h"       // Include the AIPlayer class
+#include "weighttrainer.h"  // Include the weight training system
+#include "evaluationweights.h"  // Include evaluation weights
 
 enum class PlayerType {
     HUMAN,
@@ -427,7 +429,52 @@ void runInteractiveGame() {
     delete ai2;
 }
 
+// Run weight training mode
+void runTraining(int generations, int populationSize) {
+    std::cout << "=== AI Weight Training Mode ===\n\n";
+
+    // Try to load existing weights as starting point
+    EvaluationWeights startingWeights;
+    if (startingWeights.loadFromFile("best_weights.txt")) {
+        std::cout << "Loaded existing weights from best_weights.txt\n";
+        startingWeights.print();
+    } else {
+        std::cout << "Using default weights as starting point\n";
+        startingWeights.print();
+    }
+    std::cout << "\n";
+
+    // Create trainer and run evolution
+    WeightTrainer trainer(populationSize, 2, 100, 0.15);  // 2 games per matchup, max 100 moves
+    EvaluationWeights bestWeights = trainer.train(generations, startingWeights);
+
+    // Save best weights
+    if (bestWeights.saveToFile("best_weights.txt")) {
+        std::cout << "\nBest weights saved to best_weights.txt\n";
+    } else {
+        std::cout << "\nError: Could not save weights to file\n";
+    }
+
+    std::cout << "\nYou can now use these trained weights in games!\n";
+}
+
 int main(int argc, char* argv[]) {
+    // Check for training mode
+    if (argc > 1 && std::string(argv[1]) == "--train") {
+        int generations = 10;  // Default
+        int populationSize = 20;  // Default
+
+        if (argc > 2) {
+            generations = std::atoi(argv[2]);
+        }
+        if (argc > 3) {
+            populationSize = std::atoi(argv[3]);
+        }
+
+        runTraining(generations, populationSize);
+        return 0;
+    }
+
     // Check for benchmark mode
     if (argc > 1 && std::string(argv[1]) == "--benchmark") {
         int numGames = 50;  // Default

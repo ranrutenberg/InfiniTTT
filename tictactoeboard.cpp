@@ -107,10 +107,31 @@ bool TicTacToeBoard::checkWin ( int length ) const
     return false;
 }
 
+    // Check for win without printing (for training)
+bool TicTacToeBoard::checkWinQuiet ( int length ) const
+{
+    for (const auto& [pos, mark] : board) {
+        int x = pos.first, y = pos.second;
+
+        if (checkDirection(x, y, 1, 0, length, mark) || // Horizontal
+            checkDirection(x, y, 0, 1, length, mark) || // Vertical
+            checkDirection(x, y, 1, 1, length, mark) || // Diagonal \ direction
+            checkDirection(x, y, 1, -1, length, mark))  // Diagonal /
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
     // Evaluate board position by counting potential winning sequences
     // Returns a score based on the number and quality of sequences, including gapped patterns
-int TicTacToeBoard::evaluatePosition(char mark) const
+int TicTacToeBoard::evaluatePosition(char mark, const EvaluationWeights* weights) const
 {
+    // Use default weights if none provided
+    EvaluationWeights defaultWeights;
+    const EvaluationWeights& w = weights ? *weights : defaultWeights;
+
     int score = 0;
     char opponent = (mark == 'X') ? 'O' : 'X';
     std::set<std::pair<std::pair<int, int>, std::pair<int, int>>> countedWindows;
@@ -187,24 +208,24 @@ int TicTacToeBoard::evaluatePosition(char mark) const
                     // 4 pieces in a 5-cell window - one move from winning
                     // Patterns: XXXX_, XXX_X, XX_XX, X_XXX, _XXXX
                     if (openBefore && openAfter) {
-                        windowScore = 500;  // Can complete in the gap or extend
+                        windowScore = w.four_open;  // Can complete in the gap or extend
                     } else {
-                        windowScore = 200;  // Can still complete in the gap
+                        windowScore = w.four_blocked;  // Can still complete in the gap
                     }
                 } else if (friendlyCount == 3) {
                     // 3 pieces in a 5-cell window - building toward a win
                     // Patterns: XXX__, XX_X_, XX__X, X_XX_, X_X_X, X__XX, etc.
                     if (emptyCount == 2) {
                         if (openBefore && openAfter) {
-                            windowScore = 50;  // Good potential, multiple ways to extend
+                            windowScore = w.three_open;  // Good potential, multiple ways to extend
                         } else {
-                            windowScore = 20;  // Still useful
+                            windowScore = w.three_blocked;  // Still useful
                         }
                     }
                 } else if (friendlyCount == 2) {
                     // 2 pieces in a 5-cell window - early building
                     if (emptyCount == 3 && openBefore && openAfter) {
-                        windowScore = 5;  // Minor value for positioning
+                        windowScore = w.two_open;  // Minor value for positioning
                     }
                 }
 

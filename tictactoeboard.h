@@ -7,6 +7,7 @@
 #define TICTACTOEBOARD_H
 #include <map>
 #include <utility>
+#include "evaluationweights.h"
 
 class TicTacToeBoard {
 private:
@@ -20,6 +21,7 @@ public:
     bool placeMark(int x, int y);
     void printBoard(int range = 3) const;
     bool checkWin(int length) const;
+    bool checkWinQuiet(int length) const;
 
     // Helper methods for AI
     const std::map<std::pair<int, int>, char>& getOccupiedPositions() const { return board; }
@@ -29,7 +31,7 @@ public:
     char getCurrentPlayer() const { return currentPlayer; }
 
     // Evaluate board position by counting potential winning sequences
-    int evaluatePosition(char mark) const;
+    int evaluatePosition(char mark, const EvaluationWeights* weights = nullptr) const;
 };
 
 #endif // TICTACTOEBOARD_H

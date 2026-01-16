@@ -128,8 +128,8 @@ int MinimaxAI::minimax(TicTacToeBoard& board, int depth, bool isMaximizing,
 
     // Depth limit reached - evaluate position based on winning sequences
     if (depth >= maxDepth) {
-        int computerScore = board.evaluatePosition(computerMark);
-        int opponentScore = board.evaluatePosition(humanMark);
+        int computerScore = board.evaluatePosition(computerMark, weights);
+        int opponentScore = board.evaluatePosition(humanMark, weights);
         return computerScore - opponentScore;
     }
 
