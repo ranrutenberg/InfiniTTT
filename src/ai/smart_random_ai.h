@@ -22,7 +22,8 @@ private:
     bool isWinningMove(const TicTacToeBoard& board, int x, int y, char playerMark, int winLength = 5) const;
 
 public:
-    SmartRandomAI(int level = 1) : optimizationLevel(level) {}
+    SmartRandomAI(int level = 1, bool verbose = false)
+        : AIPlayer(verbose), optimizationLevel(level) {}
 
     std::pair<int, int> findBestMove(const TicTacToeBoard& board, char playerMark,
                                       std::pair<int, int> lastMove = {INT_MIN, INT_MIN}) override;

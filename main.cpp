@@ -27,16 +27,16 @@ enum class AIType {
 };
 
 // Function to create AI instance based on type
-std::unique_ptr<AIPlayer> createAI(AIType type) {
+std::unique_ptr<AIPlayer> createAI(AIType type, bool verbose = false) {
     switch (type) {
         case AIType::MINIMAX:
-            return std::make_unique<MinimaxAI>(100, 3);
+            return std::make_unique<MinimaxAI>(100, 3, nullptr, verbose);
         case AIType::RANDOM:
-            return std::make_unique<RandomAI>();
+            return std::make_unique<RandomAI>(verbose);
         case AIType::SMART_RANDOM:
-            return std::make_unique<SmartRandomAI>(1);  // Level 1 optimization
+            return std::make_unique<SmartRandomAI>(1, verbose);  // Level 1 optimization
         default:
-            return std::make_unique<RandomAI>();
+            return std::make_unique<RandomAI>(verbose);
     }
 }
 
@@ -55,15 +55,15 @@ const char* getAITypeName(AIType type) {
 }
 
 // Run a single game and return winner ('X', 'O', or 'D' for draw)
-char runSingleGame(AIType ai1Type, AIType ai2Type, bool quiet = false) {
+char runSingleGame(AIType ai1Type, AIType ai2Type, bool quiet = false, bool verbose = false) {
     TicTacToeBoard game;
     int x, y;
     const int winningLength = 5;
     const int maxMoves = 1000;  // Prevent infinite games
     int moveCount = 0;
 
-    auto ai1 = createAI(ai1Type);
-    auto ai2 = createAI(ai2Type);
+    auto ai1 = createAI(ai1Type, verbose);
+    auto ai2 = createAI(ai2Type, verbose);
 
     const char player1Mark = 'X';
     const char player2Mark = 'O';
@@ -152,14 +152,14 @@ bool checkWinSilent(TicTacToeBoard& game, int x, int y, int winningLength) {
 }
 
 // Run a single game and return winner + move count
-std::pair<char, int> runSingleGameWithStats(AIType ai1Type, AIType ai2Type) {
+std::pair<char, int> runSingleGameWithStats(AIType ai1Type, AIType ai2Type, bool verbose = false) {
     TicTacToeBoard game;
     const int winningLength = 5;
     const int maxMoves = 1000;
     int moveCount = 0;
 
-    auto ai1 = createAI(ai1Type);
-    auto ai2 = createAI(ai2Type);
+    auto ai1 = createAI(ai1Type, verbose);
+    auto ai2 = createAI(ai2Type, verbose);
 
     const char player1Mark = 'X';
     const char player2Mark = 'O';
@@ -190,7 +190,7 @@ std::pair<char, int> runSingleGameWithStats(AIType ai1Type, AIType ai2Type) {
 }
 
 // Run benchmark comparing AI types
-void runBenchmark(int numGames, bool interactive) {
+void runBenchmark(int numGames, bool interactive, bool verbose = false) {
     std::cout << "\n=== AI Benchmark Mode ===\n";
 
     AIType ai1Type, ai2Type;
@@ -222,7 +222,7 @@ void runBenchmark(int numGames, bool interactive) {
                 std::cout.flush();
 
                 for (int game = 0; game < numGames; game++) {
-                    auto [result, moves] = runSingleGameWithStats(aiTypes[i], aiTypes[j]);
+                    auto [result, moves] = runSingleGameWithStats(aiTypes[i], aiTypes[j], verbose);
 
                     if (result == 'X') stats.xWins++;
                     else if (result == 'O') stats.oWins++;
@@ -260,7 +260,7 @@ void runBenchmark(int numGames, bool interactive) {
     BenchmarkStats stats;
 
     for (int game = 0; game < numGames; game++) {
-        auto [result, moves] = runSingleGameWithStats(ai1Type, ai2Type);
+        auto [result, moves] = runSingleGameWithStats(ai1Type, ai2Type, verbose);
 
         if (result == 'X') stats.xWins++;
         else if (result == 'O') stats.oWins++;
@@ -326,7 +326,7 @@ void runBenchmark(int numGames, bool interactive) {
 }
 
 // Interactive game mode
-void runInteractiveGame() {
+void runInteractiveGame(bool verbose = false) {
     TicTacToeBoard game;
     int x, y;
     const int winningLength = 5;
@@ -365,8 +365,8 @@ void runInteractiveGame() {
     if (choice2 == 4) ai2Type = AIType::SMART_RANDOM;
 
     // Create AI instances if needed
-    auto ai1 = (player1Type == PlayerType::AI) ? createAI(ai1Type) : nullptr;
-    auto ai2 = (player2Type == PlayerType::AI) ? createAI(ai2Type) : nullptr;
+    auto ai1 = (player1Type == PlayerType::AI) ? createAI(ai1Type, verbose) : nullptr;
+    auto ai2 = (player2Type == PlayerType::AI) ? createAI(ai2Type, verbose) : nullptr;
 
     const char player1Mark = 'X';
     const char player2Mark = 'O';
@@ -476,6 +476,15 @@ void runTraining(int generations, int populationSize, int gamesPerMatchup) {
 }
 
 int main(int argc, char* argv[]) {
+    // Scan for --verbose flag
+    bool verboseAI = false;
+    for (int i = 1; i < argc; ++i) {
+        if (std::string(argv[i]) == "--verbose") {
+            verboseAI = true;
+            break;
+        }
+    }
+
     // Check for help
     if (argc > 1 && (std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h")) {
         std::cout << "Infinite Tic-Tac-Toe - Usage:\n\n";
@@ -492,6 +501,10 @@ int main(int argc, char* argv[]) {
         std::cout << "Benchmark mode:\n";
         std::cout << "  ./InfiniTTT --benchmark [num_games]\n";
         std::cout << "  ./InfiniTTT --benchmark --all [num_games]\n\n";
+        std::cout << "Verbose mode (show AI move scores):\n";
+        std::cout << "  ./InfiniTTT --verbose\n";
+        std::cout << "  ./InfiniTTT --benchmark --verbose 50\n";
+        std::cout << "  ./InfiniTTT --train --verbose 10 20 6\n\n";
         return 0;
     }
 
@@ -538,9 +551,9 @@ int main(int argc, char* argv[]) {
             numGames = std::atoi(argv[3]);
         }
 
-        runBenchmark(numGames, interactive);
+        runBenchmark(numGames, interactive, verboseAI);
     } else {
-        runInteractiveGame();
+        runInteractiveGame(verboseAI);
     }
 
     return 0;

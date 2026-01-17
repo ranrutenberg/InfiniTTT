@@ -7,7 +7,6 @@
 #define TICTACTOEBOARD_H
 #include <map>
 #include <utility>
-#include "evaluationweights.h"
 
 class TicTacToeBoard {
 private:
@@ -31,9 +30,6 @@ public:
     void placeMarkDirect(int x, int y, char mark) { board[{x, y}] = mark; }
     void removeMarkDirect(int x, int y) { board.erase({x, y}); }
     char getCurrentPlayer() const { return currentPlayer; }
-
-    // Evaluate board position by counting potential winning sequences
-    int evaluatePosition(char mark, const EvaluationWeights* weights = nullptr) const;
 };
 
 #endif // TICTACTOEBOARD_H

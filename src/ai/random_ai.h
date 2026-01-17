@@ -15,7 +15,7 @@ private:
     std::set<std::pair<int, int>> availableMoves;  // Maintained internally by AI
 
 public:
-    RandomAI() = default;
+    RandomAI(bool verbose = false) : AIPlayer(verbose) {}
 
     std::pair<int, int> findBestMove(const TicTacToeBoard& board, char playerMark,
                                       std::pair<int, int> lastMove = {INT_MIN, INT_MIN}) override;

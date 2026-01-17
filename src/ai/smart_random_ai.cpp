@@ -5,6 +5,7 @@
 #include "smart_random_ai.h"
 #include "ai_utils.h"
 #include "tictactoeboard.h"
+#include <iostream>
 #include <random>
 #include <algorithm>
 
@@ -55,24 +56,50 @@ std::pair<int, int> SmartRandomAI::findBestMove(const TicTacToeBoard& board, cha
 
     // OPTIMIZATION LEVEL 1: Check for winning moves
     if (optimizationLevel >= 1) {
+        std::vector<std::pair<int, int>> winningMoves;
+
         for (const auto& move : availableMoves) {
             if (isWinningMove(board, move.first, move.second, playerMark)) {
-                // Found a winning move! Update internal state and return it
-                auto winningMove = move;
-
-                // Update internal available moves with our chosen move
-                availableMoves.erase(winningMove);
-
-                // Add adjacent positions
-                for (int i = winningMove.first - 1; i <= winningMove.first + 1; ++i) {
-                    for (int j = winningMove.second - 1; j <= winningMove.second + 1; ++j) {
-                        if (i == winningMove.first && j == winningMove.second) continue;
-                        availableMoves.insert({i, j});
-                    }
-                }
-
-                return winningMove;
+                winningMoves.push_back(move);
             }
+        }
+
+        if (!winningMoves.empty()) {
+            // Verbose output
+            if (verboseMode) {
+                std::cout << "\n══════════════════════════════════════════════════════\n";
+                std::cout << "[SmartRandomAI Move Analysis - Player " << playerMark << "]\n";
+                std::cout << "══════════════════════════════════════════════════════\n";
+                std::cout << "Checked " << availableMoves.size() << " available moves\n";
+                std::cout << "Winning moves found: " << winningMoves.size() << "\n";
+                for (const auto& move : winningMoves) {
+                    std::cout << "  - (" << move.first << ", " << move.second << ")\n";
+                }
+            }
+
+            // Found winning move(s)! Pick one randomly
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<> dis(0, winningMoves.size() - 1);
+            auto winningMove = winningMoves[dis(gen)];
+
+            if (verboseMode) {
+                std::cout << "\nSelected winning move: (" << winningMove.first << ", " << winningMove.second << ")\n";
+                std::cout << "══════════════════════════════════════════════════════\n\n";
+            }
+
+            // Update internal available moves with our chosen move
+            availableMoves.erase(winningMove);
+
+            // Add adjacent positions
+            for (int i = winningMove.first - 1; i <= winningMove.first + 1; ++i) {
+                for (int j = winningMove.second - 1; j <= winningMove.second + 1; ++j) {
+                    if (i == winningMove.first && j == winningMove.second) continue;
+                    availableMoves.insert({i, j});
+                }
+            }
+
+            return winningMove;
         }
     }
 

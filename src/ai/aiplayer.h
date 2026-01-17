@@ -12,7 +12,11 @@ class TicTacToeBoard;
 
 // Abstract base class for AI players
 class AIPlayer {
+protected:
+    bool verboseMode = false;
+
 public:
+    explicit AIPlayer(bool verbose = false) : verboseMode(verbose) {}
     virtual ~AIPlayer() = default;
 
     // Find and return the best move for the current board state
