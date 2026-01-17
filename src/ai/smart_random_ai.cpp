@@ -103,7 +103,57 @@ std::pair<int, int> SmartRandomAI::findBestMove(const TicTacToeBoard& board, cha
         }
     }
 
-    // No winning move found (or optimization disabled), pick random move
+    // OPTIMIZATION LEVEL 2: Block opponent winning moves
+    if (optimizationLevel >= 2) {
+        char opponentMark = (playerMark == 'X') ? 'O' : 'X';
+        std::vector<std::pair<int, int>> blockingMoves;
+
+        for (const auto& move : availableMoves) {
+            if (isWinningMove(board, move.first, move.second, opponentMark)) {
+                blockingMoves.push_back(move);
+            }
+        }
+
+        if (!blockingMoves.empty()) {
+            // Verbose output
+            if (verboseMode) {
+                std::cout << "\n══════════════════════════════════════════════════════\n";
+                std::cout << "[SmartRandomAI Move Analysis - Player " << playerMark << "]\n";
+                std::cout << "══════════════════════════════════════════════════════\n";
+                std::cout << "Checked " << availableMoves.size() << " available moves\n";
+                std::cout << "Opponent threatening moves found: " << blockingMoves.size() << "\n";
+                for (const auto& move : blockingMoves) {
+                    std::cout << "  - (" << move.first << ", " << move.second << ")\n";
+                }
+            }
+
+            // Found opponent winning move(s) to block! Pick one randomly
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<> dis(0, blockingMoves.size() - 1);
+            auto blockingMove = blockingMoves[dis(gen)];
+
+            if (verboseMode) {
+                std::cout << "\nSelected blocking move: (" << blockingMove.first << ", " << blockingMove.second << ")\n";
+                std::cout << "══════════════════════════════════════════════════════\n\n";
+            }
+
+            // Update internal available moves with our chosen move
+            availableMoves.erase(blockingMove);
+
+            // Add adjacent positions
+            for (int i = blockingMove.first - 1; i <= blockingMove.first + 1; ++i) {
+                for (int j = blockingMove.second - 1; j <= blockingMove.second + 1; ++j) {
+                    if (i == blockingMove.first && j == blockingMove.second) continue;
+                    availableMoves.insert({i, j});
+                }
+            }
+
+            return blockingMove;
+        }
+    }
+
+    // No winning or blocking move found (or optimization disabled), pick random move
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(0, availableMoves.size() - 1);

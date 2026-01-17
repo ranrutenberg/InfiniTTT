@@ -11,7 +11,7 @@ class TicTacToeBoard;
 
 // Smart Random AI implementation - random with stepwise optimizations
 // Level 1: Check for winning moves first
-// Level 2: (Future) Block opponent winning moves
+// Level 2: Block opponent winning moves
 // Level 3: (Future) Prioritize center positions
 class SmartRandomAI : public AIPlayer {
 private:

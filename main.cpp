@@ -34,7 +34,7 @@ std::unique_ptr<AIPlayer> createAI(AIType type, bool verbose = false) {
         case AIType::RANDOM:
             return std::make_unique<RandomAI>(verbose);
         case AIType::SMART_RANDOM:
-            return std::make_unique<SmartRandomAI>(1, verbose);  // Level 1 optimization
+            return std::make_unique<SmartRandomAI>(2, verbose);  // Level 2 optimization
         default:
             return std::make_unique<RandomAI>(verbose);
     }
