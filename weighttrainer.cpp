@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 #include "weighttrainer.h"
+#include "src/ai/minimax_ai.h"
 #include <iostream>
 #include <algorithm>
 

@@ -8,7 +8,10 @@
 #include <climits>
 #include <memory>
 #include "tictactoeboard.h" // Include the TicTacToeBoard class
-#include "aiplayer.h"       // Include the AIPlayer class
+#include "src/ai/aiplayer.h"       // Include the AIPlayer class
+#include "src/ai/minimax_ai.h"     // Include MinimaxAI
+#include "src/ai/random_ai.h"      // Include RandomAI
+#include "src/ai/smart_random_ai.h" // Include SmartRandomAI
 #include "weighttrainer.h"  // Include the weight training system
 #include "evaluationweights.h"  // Include evaluation weights
 

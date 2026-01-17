@@ -7,7 +7,7 @@
 #define WEIGHTTRAINER_H
 
 #include "evaluationweights.h"
-#include "aiplayer.h"
+#include "src/ai/aiplayer.h"
 #include "tictactoeboard.h"
 #include <vector>
 #include <algorithm>
