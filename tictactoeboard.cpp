@@ -25,6 +25,47 @@ bool TicTacToeBoard::checkDirection ( int x, int y, int dx, int dy, int length, 
     return true;
 }
 
+// Count consecutive marks in a given direction (positive or negative)
+int TicTacToeBoard::countConsecutive(int x, int y, int dx, int dy, char mark) const
+{
+    int count = 0;
+    int nx = x + dx;
+    int ny = y + dy;
+
+    while (board.count({nx, ny}) > 0 && board.at({nx, ny}) == mark) {
+        count++;
+        nx += dx;
+        ny += dy;
+    }
+
+    return count;
+}
+
+// Check if a specific position is part of a winning sequence
+bool TicTacToeBoard::checkWinFromPosition(int x, int y, int length, char mark) const
+{
+    // Check all four directions: horizontal, vertical, and two diagonals
+    const int directions[4][2] = {{1, 0}, {0, 1}, {1, 1}, {1, -1}};
+
+    for (const auto& dir : directions) {
+        int dx = dir[0];
+        int dy = dir[1];
+
+        // Count consecutive marks in both positive and negative directions
+        int positiveCount = countConsecutive(x, y, dx, dy, mark);
+        int negativeCount = countConsecutive(x, y, -dx, -dy, mark);
+
+        // Total consecutive marks including the current position
+        int totalCount = positiveCount + negativeCount + 1;
+
+        if (totalCount >= length) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 
     // Place a mark on the board at a given position
 bool TicTacToeBoard::placeMark ( int x, int y )
@@ -90,38 +131,36 @@ void TicTacToeBoard::printBoard ( int range ) const
 }
 
     // Check for a winning line of a specified length
-bool TicTacToeBoard::checkWin ( int length ) const
+bool TicTacToeBoard::checkWin ( int x, int y, int length ) const
 {
-    for (const auto& [pos, mark] : board) {
-        int x = pos.first, y = pos.second;
-
-        if (checkDirection(x, y, 1, 0, length, mark) || // Horizontal
-            checkDirection(x, y, 0, 1, length, mark) || // Vertical
-            checkDirection(x, y, 1, 1, length, mark) || // Diagonal \ direction
-            checkDirection(x, y, 1, -1, length, mark))  // Diagonal /
-        {
-            std::cout << "Player " << mark << " wins!\n";
-            return true;
-        }
+    // Get the mark at the last move position
+    if (board.count({x, y}) == 0) {
+        return false;  // No mark at this position
     }
+
+    char mark = board.at({x, y});
+
+    // Check if the last move is part of a winning sequence
+    if (checkWinFromPosition(x, y, length, mark)) {
+        std::cout << "Player " << mark << " wins!\n";
+        return true;
+    }
+
     return false;
 }
 
     // Check for win without printing (for training)
-bool TicTacToeBoard::checkWinQuiet ( int length ) const
+bool TicTacToeBoard::checkWinQuiet ( int x, int y, int length ) const
 {
-    for (const auto& [pos, mark] : board) {
-        int x = pos.first, y = pos.second;
-
-        if (checkDirection(x, y, 1, 0, length, mark) || // Horizontal
-            checkDirection(x, y, 0, 1, length, mark) || // Vertical
-            checkDirection(x, y, 1, 1, length, mark) || // Diagonal \ direction
-            checkDirection(x, y, 1, -1, length, mark))  // Diagonal /
-        {
-            return true;
-        }
+    // Get the mark at the last move position
+    if (board.count({x, y}) == 0) {
+        return false;  // No mark at this position
     }
-    return false;
+
+    char mark = board.at({x, y});
+
+    // Check if the last move is part of a winning sequence
+    return checkWinFromPosition(x, y, length, mark);
 }
 
     // Evaluate board position by counting potential winning sequences

@@ -30,7 +30,7 @@ int WeightTrainer::playSilentGame(const EvaluationWeights& weights1,
         moveCount++;
 
         // Check if player 1 won
-        if (board.checkWinQuiet(5)) {
+        if (board.checkWinQuiet(move1.first, move1.second, 5)) {
             return 1;  // weights1 wins
         }
 
@@ -43,7 +43,7 @@ int WeightTrainer::playSilentGame(const EvaluationWeights& weights1,
         moveCount++;
 
         // Check if player 2 won
-        if (board.checkWinQuiet(5)) {
+        if (board.checkWinQuiet(move2.first, move2.second, 5)) {
             return -1;  // weights2 wins
         }
     }

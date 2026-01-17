@@ -37,7 +37,7 @@ private:
     int minimax(TicTacToeBoard& board, int depth, bool isMaximizing,
                 char computerMark, char humanMark, int timeLimitMs,
                 std::chrono::time_point<std::chrono::high_resolution_clock> startTime,
-                int alpha, int beta);
+                int alpha, int beta, std::pair<int, int> lastMove);
 
 public:
     MinimaxAI(int timeLimit = 100, int depth = 3, const EvaluationWeights* w = nullptr)
