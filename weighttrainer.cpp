@@ -5,8 +5,22 @@
 
 #include "weighttrainer.h"
 #include "src/ai/minimax_ai.h"
+#include "src/ai/hybrid_evaluator_ai.h"
 #include <iostream>
 #include <algorithm>
+
+// Create AI instance for training
+std::unique_ptr<AIPlayer> WeightTrainer::createTrainingAI(const EvaluationWeights& weights) {
+    switch (trainingAIType) {
+        case AIType::MINIMAX:
+            return std::make_unique<MinimaxAI>(100, 3, &weights);
+        case AIType::HYBRID_EVALUATOR:
+            return std::make_unique<HybridEvaluatorAI>(&weights);
+        default:
+            std::cerr << "Error: AI type does not support weight training\n";
+            return std::make_unique<MinimaxAI>(100, 3, &weights);
+    }
+}
 
 // Play a single game silently between two weight configurations
 // Returns: 1 if weights1 wins, -1 if weights2 wins, 0 for draw
@@ -14,8 +28,8 @@ int WeightTrainer::playSilentGame(const EvaluationWeights& weights1,
                                    const EvaluationWeights& weights2,
                                    int maxMoves, bool player1First) {
     TicTacToeBoard board;
-    MinimaxAI ai1(100, 3, &weights1);
-    MinimaxAI ai2(100, 3, &weights2);
+    auto ai1 = createTrainingAI(weights1);
+    auto ai2 = createTrainingAI(weights2);
 
     char player1Mark = player1First ? 'X' : 'O';
     char player2Mark = player1First ? 'O' : 'X';
@@ -25,7 +39,7 @@ int WeightTrainer::playSilentGame(const EvaluationWeights& weights1,
 
     while (moveCount < maxMoves) {
         // Player 1's turn
-        auto move1 = ai1.findBestMove(board, player1Mark, lastMove);
+        auto move1 = ai1->findBestMove(board, player1Mark, lastMove);
         board.placeMarkDirect(move1.first, move1.second, player1Mark);
         lastMove = move1;
         moveCount++;
@@ -38,7 +52,7 @@ int WeightTrainer::playSilentGame(const EvaluationWeights& weights1,
         if (moveCount >= maxMoves) break;
 
         // Player 2's turn
-        auto move2 = ai2.findBestMove(board, player2Mark, lastMove);
+        auto move2 = ai2->findBestMove(board, player2Mark, lastMove);
         board.placeMarkDirect(move2.first, move2.second, player2Mark);
         lastMove = move2;
         moveCount++;

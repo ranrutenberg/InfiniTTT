@@ -7,11 +7,14 @@
 #include <iomanip>
 #include <climits>
 #include <memory>
+#include <map>
 #include "tictactoeboard.h" // Include the TicTacToeBoard class
+#include "ai_types.h"              // Include AIType enum
 #include "src/ai/aiplayer.h"       // Include the AIPlayer class
 #include "src/ai/minimax_ai.h"     // Include MinimaxAI
 #include "src/ai/random_ai.h"      // Include RandomAI
 #include "src/ai/smart_random_ai.h" // Include SmartRandomAI
+#include "src/ai/hybrid_evaluator_ai.h" // Include HybridEvaluatorAI
 #include "weighttrainer.h"  // Include the weight training system
 #include "evaluationweights.h"  // Include evaluation weights
 
@@ -20,21 +23,18 @@ enum class PlayerType {
     AI
 };
 
-enum class AIType {
-    MINIMAX,
-    RANDOM,
-    SMART_RANDOM
-};
-
 // Function to create AI instance based on type
-std::unique_ptr<AIPlayer> createAI(AIType type, bool verbose = false) {
+// Pass weights pointer to enable trained weights (nullptr for default weights)
+std::unique_ptr<AIPlayer> createAI(AIType type, const EvaluationWeights* weights = nullptr, bool verbose = false) {
     switch (type) {
         case AIType::MINIMAX:
-            return std::make_unique<MinimaxAI>(100, 3, nullptr, verbose);
+            return std::make_unique<MinimaxAI>(100, 3, weights, verbose);
         case AIType::RANDOM:
             return std::make_unique<RandomAI>(verbose);
         case AIType::SMART_RANDOM:
             return std::make_unique<SmartRandomAI>(2, verbose);  // Level 2 optimization
+        case AIType::HYBRID_EVALUATOR:
+            return std::make_unique<HybridEvaluatorAI>(weights, verbose);
         default:
             return std::make_unique<RandomAI>(verbose);
     }
@@ -49,9 +49,46 @@ const char* getAITypeName(AIType type) {
             return "Random";
         case AIType::SMART_RANDOM:
             return "Smart Random";
+        case AIType::HYBRID_EVALUATOR:
+            return "Hybrid Evaluator";
         default:
             return "Unknown";
     }
+}
+
+// Function to get weight filename for AI type
+const char* getWeightFilename(AIType type) {
+    switch (type) {
+        case AIType::MINIMAX:
+            return "minimax_weights.txt";
+        case AIType::HYBRID_EVALUATOR:
+            return "hybrid_evaluator_weights.txt";
+        default:
+            return nullptr;  // AI type doesn't support weights
+    }
+}
+
+// Load trained weights for AI type (returns nullptr if not available)
+std::unique_ptr<EvaluationWeights> loadWeightsForAI(AIType type) {
+    const char* filename = getWeightFilename(type);
+    if (!filename) {
+        return nullptr;  // AI type doesn't support weights
+    }
+
+    auto weights = std::make_unique<EvaluationWeights>();
+    if (weights->loadFromFile(filename)) {
+        std::cout << "Loaded trained weights for " << getAITypeName(type)
+                  << " from " << filename << "\n";
+        return weights;
+    }
+
+    // Backward compatibility: Try best_weights.txt for MinimaxAI
+    if (type == AIType::MINIMAX && weights->loadFromFile("best_weights.txt")) {
+        std::cout << "Loaded weights from best_weights.txt (legacy format)\n";
+        return weights;
+    }
+
+    return nullptr;  // No trained weights available
 }
 
 // Run a single game and return winner ('X', 'O', or 'D' for draw)
@@ -62,8 +99,8 @@ char runSingleGame(AIType ai1Type, AIType ai2Type, bool quiet = false, bool verb
     const int maxMoves = 1000;  // Prevent infinite games
     int moveCount = 0;
 
-    auto ai1 = createAI(ai1Type, verbose);
-    auto ai2 = createAI(ai2Type, verbose);
+    auto ai1 = createAI(ai1Type, nullptr, verbose);
+    auto ai2 = createAI(ai2Type, nullptr, verbose);
 
     const char player1Mark = 'X';
     const char player2Mark = 'O';
@@ -113,12 +150,14 @@ AIType selectAIType(const std::string& playerName) {
     std::cout << "1. Minimax (Strategic)\n";
     std::cout << "2. Random\n";
     std::cout << "3. Smart Random (Random + Win Detection)\n";
-    std::cout << "Enter choice (1-3): ";
+    std::cout << "4. Hybrid Evaluator (Tactical + Strategic)\n";
+    std::cout << "Enter choice (1-4): ";
     int choice;
     std::cin >> choice;
 
     if (choice == 2) return AIType::RANDOM;
     if (choice == 3) return AIType::SMART_RANDOM;
+    if (choice == 4) return AIType::HYBRID_EVALUATOR;
     return AIType::MINIMAX;
 }
 
@@ -152,14 +191,16 @@ bool checkWinSilent(TicTacToeBoard& game, int x, int y, int winningLength) {
 }
 
 // Run a single game and return winner + move count
-std::pair<char, int> runSingleGameWithStats(AIType ai1Type, AIType ai2Type, bool verbose = false) {
+std::pair<char, int> runSingleGameWithStats(AIType ai1Type, AIType ai2Type, bool verbose = false,
+                                             const EvaluationWeights* ai1Weights = nullptr,
+                                             const EvaluationWeights* ai2Weights = nullptr) {
     TicTacToeBoard game;
     const int winningLength = 5;
     const int maxMoves = 1000;
     int moveCount = 0;
 
-    auto ai1 = createAI(ai1Type, verbose);
-    auto ai2 = createAI(ai2Type, verbose);
+    auto ai1 = createAI(ai1Type, ai1Weights, verbose);
+    auto ai2 = createAI(ai2Type, ai2Weights, verbose);
 
     const char player1Mark = 'X';
     const char player2Mark = 'O';
@@ -190,8 +231,18 @@ std::pair<char, int> runSingleGameWithStats(AIType ai1Type, AIType ai2Type, bool
 }
 
 // Run benchmark comparing AI types
-void runBenchmark(int numGames, bool interactive, bool verbose = false) {
+void runBenchmark(int numGames, bool interactive, bool verbose = false, bool useTrainedWeights = false) {
     std::cout << "\n=== AI Benchmark Mode ===\n";
+
+    // Load weights for all weight-aware AIs if requested
+    std::map<AIType, std::unique_ptr<EvaluationWeights>> aiWeights;
+    if (useTrainedWeights) {
+        std::cout << "Loading trained weights...\n";
+        for (auto type : {AIType::MINIMAX, AIType::HYBRID_EVALUATOR}) {
+            aiWeights[type] = loadWeightsForAI(type);
+        }
+        std::cout << "\n";
+    }
 
     AIType ai1Type, ai2Type;
 
@@ -208,8 +259,8 @@ void runBenchmark(int numGames, bool interactive, bool verbose = false) {
         }
     } else {
         // Run all matchups
-        AIType aiTypes[] = {AIType::MINIMAX, AIType::RANDOM, AIType::SMART_RANDOM};
-        int numTypes = 3;
+        AIType aiTypes[] = {AIType::MINIMAX, AIType::RANDOM, AIType::SMART_RANDOM, AIType::HYBRID_EVALUATOR};
+        int numTypes = 4;
 
         std::cout << "Running " << numGames << " games for each matchup...\n\n";
 
@@ -222,7 +273,9 @@ void runBenchmark(int numGames, bool interactive, bool verbose = false) {
                 std::cout.flush();
 
                 for (int game = 0; game < numGames; game++) {
-                    auto [result, moves] = runSingleGameWithStats(aiTypes[i], aiTypes[j], verbose);
+                    auto [result, moves] = runSingleGameWithStats(aiTypes[i], aiTypes[j], verbose,
+                                                                   aiWeights[aiTypes[i]].get(),
+                                                                   aiWeights[aiTypes[j]].get());
 
                     if (result == 'X') stats.xWins++;
                     else if (result == 'O') stats.oWins++;
@@ -260,7 +313,9 @@ void runBenchmark(int numGames, bool interactive, bool verbose = false) {
     BenchmarkStats stats;
 
     for (int game = 0; game < numGames; game++) {
-        auto [result, moves] = runSingleGameWithStats(ai1Type, ai2Type, verbose);
+        auto [result, moves] = runSingleGameWithStats(ai1Type, ai2Type, verbose,
+                                                       aiWeights[ai1Type].get(),
+                                                       aiWeights[ai2Type].get());
 
         if (result == 'X') stats.xWins++;
         else if (result == 'O') stats.oWins++;
@@ -326,7 +381,7 @@ void runBenchmark(int numGames, bool interactive, bool verbose = false) {
 }
 
 // Interactive game mode
-void runInteractiveGame(bool verbose = false) {
+void runInteractiveGame(bool verbose = false, bool useTrainedWeights = false) {
     TicTacToeBoard game;
     int x, y;
     const int winningLength = 5;
@@ -340,7 +395,8 @@ void runInteractiveGame(bool verbose = false) {
     std::cout << "2. AI (Minimax)\n";
     std::cout << "3. AI (Random)\n";
     std::cout << "4. AI (Smart Random)\n";
-    std::cout << "Enter choice (1-4): ";
+    std::cout << "5. AI (Hybrid Evaluator)\n";
+    std::cout << "Enter choice (1-5): ";
     int choice1;
     std::cin >> choice1;
 
@@ -348,6 +404,7 @@ void runInteractiveGame(bool verbose = false) {
     AIType ai1Type = AIType::MINIMAX;  // Default
     if (choice1 == 3) ai1Type = AIType::RANDOM;
     if (choice1 == 4) ai1Type = AIType::SMART_RANDOM;
+    if (choice1 == 5) ai1Type = AIType::HYBRID_EVALUATOR;
 
     // Configure Player 2 (O)
     std::cout << "\nPlayer 2 (O) - Select type:\n";
@@ -355,7 +412,8 @@ void runInteractiveGame(bool verbose = false) {
     std::cout << "2. AI (Minimax)\n";
     std::cout << "3. AI (Random)\n";
     std::cout << "4. AI (Smart Random)\n";
-    std::cout << "Enter choice (1-4): ";
+    std::cout << "5. AI (Hybrid Evaluator)\n";
+    std::cout << "Enter choice (1-5): ";
     int choice2;
     std::cin >> choice2;
 
@@ -363,10 +421,24 @@ void runInteractiveGame(bool verbose = false) {
     AIType ai2Type = AIType::MINIMAX;  // Default
     if (choice2 == 3) ai2Type = AIType::RANDOM;
     if (choice2 == 4) ai2Type = AIType::SMART_RANDOM;
+    if (choice2 == 5) ai2Type = AIType::HYBRID_EVALUATOR;
+
+    // Load weights if requested
+    std::unique_ptr<EvaluationWeights> ai1Weights = nullptr;
+    std::unique_ptr<EvaluationWeights> ai2Weights = nullptr;
+
+    if (useTrainedWeights) {
+        if (player1Type == PlayerType::AI) {
+            ai1Weights = loadWeightsForAI(ai1Type);
+        }
+        if (player2Type == PlayerType::AI) {
+            ai2Weights = loadWeightsForAI(ai2Type);
+        }
+    }
 
     // Create AI instances if needed
-    auto ai1 = (player1Type == PlayerType::AI) ? createAI(ai1Type, verbose) : nullptr;
-    auto ai2 = (player2Type == PlayerType::AI) ? createAI(ai2Type, verbose) : nullptr;
+    auto ai1 = (player1Type == PlayerType::AI) ? createAI(ai1Type, ai1Weights.get(), verbose) : nullptr;
+    auto ai2 = (player2Type == PlayerType::AI) ? createAI(ai2Type, ai2Weights.get(), verbose) : nullptr;
 
     const char player1Mark = 'X';
     const char player2Mark = 'O';
@@ -442,18 +514,27 @@ void runInteractiveGame(bool verbose = false) {
 }
 
 // Run weight training mode
-void runTraining(int generations, int populationSize, int gamesPerMatchup) {
-    std::cout << "=== AI Weight Training Mode ===\n\n";
+void runTraining(AIType aiType, int generations, int populationSize, int gamesPerMatchup) {
+    std::cout << "=== AI Weight Training Mode ===\n";
+    std::cout << "Training: " << getAITypeName(aiType) << "\n\n";
     std::cout << "Configuration:\n";
     std::cout << "  Generations: " << generations << "\n";
     std::cout << "  Population size: " << populationSize << "\n";
     std::cout << "  Games per matchup: " << gamesPerMatchup << "\n";
     std::cout << "  Estimated total games: " << (populationSize * (populationSize - 1) / 2 * gamesPerMatchup * generations) << "\n\n";
 
-    // Try to load existing weights as starting point
+    // Get AI-specific filename
+    const char* weightFilename = getWeightFilename(aiType);
+    if (!weightFilename) {
+        std::cerr << "Error: " << getAITypeName(aiType)
+                  << " does not support weight training\n";
+        return;
+    }
+
+    // Try to load existing weights from AI-specific file as starting point
     EvaluationWeights startingWeights;
-    if (startingWeights.loadFromFile("best_weights.txt")) {
-        std::cout << "Loaded existing weights from best_weights.txt\n";
+    if (startingWeights.loadFromFile(weightFilename)) {
+        std::cout << "Loaded existing weights from " << weightFilename << "\n";
         startingWeights.print();
     } else {
         std::cout << "Using default weights as starting point\n";
@@ -461,18 +542,18 @@ void runTraining(int generations, int populationSize, int gamesPerMatchup) {
     }
     std::cout << "\n";
 
-    // Create trainer and run evolution
-    WeightTrainer trainer(populationSize, gamesPerMatchup, 100, 0.15);  // configurable games per matchup, max 100 moves
+    // Create trainer for specific AI type and run evolution
+    WeightTrainer trainer(aiType, populationSize, gamesPerMatchup, 100, 0.15);
     EvaluationWeights bestWeights = trainer.train(generations, startingWeights);
 
-    // Save best weights
-    if (bestWeights.saveToFile("best_weights.txt")) {
-        std::cout << "\nBest weights saved to best_weights.txt\n";
+    // Save best weights to AI-specific file
+    if (bestWeights.saveToFile(weightFilename)) {
+        std::cout << "\nBest weights saved to " << weightFilename << "\n";
     } else {
-        std::cout << "\nError: Could not save weights to file\n";
+        std::cout << "\nError: Could not save weights to " << weightFilename << "\n";
     }
 
-    std::cout << "\nYou can now use these trained weights in games!\n";
+    std::cout << "\nUse with: ./InfiniTTT --use-trained-weights\n";
 }
 
 int main(int argc, char* argv[]) {
@@ -485,43 +566,76 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    // Scan for --use-trained-weights flag
+    bool useTrainedWeights = false;
+    for (int i = 1; i < argc; ++i) {
+        if (std::string(argv[i]) == "--use-trained-weights") {
+            useTrainedWeights = true;
+            break;
+        }
+    }
+
     // Check for help
     if (argc > 1 && (std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h")) {
         std::cout << "Infinite Tic-Tac-Toe - Usage:\n\n";
         std::cout << "Interactive mode (default):\n";
         std::cout << "  ./InfiniTTT\n\n";
         std::cout << "Training mode:\n";
-        std::cout << "  ./InfiniTTT --train [generations] [population] [games_per_matchup]\n";
+        std::cout << "  ./InfiniTTT --train [aitype] [generations] [population] [games_per_matchup]\n";
+        std::cout << "  AI types: minimax, hybrid (default: minimax)\n";
         std::cout << "  Arguments:\n";
+        std::cout << "    aitype             - AI to train: minimax, hybrid (default: minimax)\n";
         std::cout << "    generations        - Number of evolution cycles (default: 10)\n";
         std::cout << "    population         - Number of weight candidates (default: 20)\n";
         std::cout << "    games_per_matchup  - Games each pair plays (default: 6)\n";
-        std::cout << "  Example: ./InfiniTTT --train 5 10 4\n";
+        std::cout << "  Examples:\n";
+        std::cout << "    ./InfiniTTT --train minimax 10 20 6\n";
+        std::cout << "    ./InfiniTTT --train hybrid 10 20 6\n";
         std::cout << "  Note: More games per matchup = more stable results but slower\n\n";
+        std::cout << "Using trained weights:\n";
+        std::cout << "  ./InfiniTTT --use-trained-weights\n";
+        std::cout << "  ./InfiniTTT --benchmark --use-trained-weights --all 50\n";
+        std::cout << "  Note: Automatically loads trained weights for supported AIs\n\n";
         std::cout << "Benchmark mode:\n";
         std::cout << "  ./InfiniTTT --benchmark [num_games]\n";
         std::cout << "  ./InfiniTTT --benchmark --all [num_games]\n\n";
         std::cout << "Verbose mode (show AI move scores):\n";
         std::cout << "  ./InfiniTTT --verbose\n";
         std::cout << "  ./InfiniTTT --benchmark --verbose 50\n";
-        std::cout << "  ./InfiniTTT --train --verbose 10 20 6\n\n";
+        std::cout << "  ./InfiniTTT --train --verbose minimax 10 20 6\n\n";
         return 0;
     }
 
     // Check for training mode
     if (argc > 1 && std::string(argv[1]) == "--train") {
+        AIType aiType = AIType::MINIMAX;  // Default
         int generations = 10;  // Default
         int populationSize = 20;  // Default
         int gamesPerMatchup = 6;  // Default - higher than 2 to reduce random effects
+        int argOffset = 2;  // Start after --train
 
+        // Check if first argument is AI type
         if (argc > 2) {
-            generations = std::atoi(argv[2]);
+            std::string aiTypeStr = argv[2];
+            if (aiTypeStr == "minimax") {
+                aiType = AIType::MINIMAX;
+                argOffset = 3;
+            } else if (aiTypeStr == "hybrid") {
+                aiType = AIType::HYBRID_EVALUATOR;
+                argOffset = 3;
+            }
+            // else: treat as number (backward compatible)
         }
-        if (argc > 3) {
-            populationSize = std::atoi(argv[3]);
+
+        // Parse remaining numeric arguments
+        if (argc > argOffset) {
+            generations = std::atoi(argv[argOffset]);
         }
-        if (argc > 4) {
-            gamesPerMatchup = std::atoi(argv[4]);
+        if (argc > argOffset + 1) {
+            populationSize = std::atoi(argv[argOffset + 1]);
+        }
+        if (argc > argOffset + 2) {
+            gamesPerMatchup = std::atoi(argv[argOffset + 2]);
         }
 
         // Validate parameters
@@ -530,7 +644,7 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
-        runTraining(generations, populationSize, gamesPerMatchup);
+        runTraining(aiType, generations, populationSize, gamesPerMatchup);
         return 0;
     }
 
@@ -551,9 +665,9 @@ int main(int argc, char* argv[]) {
             numGames = std::atoi(argv[3]);
         }
 
-        runBenchmark(numGames, interactive, verboseAI);
+        runBenchmark(numGames, interactive, verboseAI, useTrainedWeights);
     } else {
-        runInteractiveGame(verboseAI);
+        runInteractiveGame(verboseAI, useTrainedWeights);
     }
 
     return 0;

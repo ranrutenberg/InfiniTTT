@@ -7,6 +7,7 @@
 #define WEIGHTTRAINER_H
 
 #include "evaluationweights.h"
+#include "ai_types.h"
 #include "src/ai/aiplayer.h"
 #include "tictactoeboard.h"
 #include <vector>
@@ -14,6 +15,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include <memory>
 
 struct WeightCandidate {
     EvaluationWeights weights;
@@ -36,6 +38,7 @@ struct WeightCandidate {
 
 class WeightTrainer {
 private:
+    AIType trainingAIType;
     int populationSize;
     int gamesPerMatchup;
     int maxMoves;
@@ -45,9 +48,12 @@ private:
     int playSilentGame(const EvaluationWeights& weights1, const EvaluationWeights& weights2,
                        int maxMoves, bool player1First);
 
+    // Create AI instance for training
+    std::unique_ptr<AIPlayer> createTrainingAI(const EvaluationWeights& weights);
+
 public:
-    WeightTrainer(int popSize = 20, int gamesPerMatch = 10, int maxMov = 200, double mutRate = 0.15)
-        : populationSize(popSize), gamesPerMatchup(gamesPerMatch),
+    WeightTrainer(AIType aiType = AIType::MINIMAX, int popSize = 20, int gamesPerMatch = 10, int maxMov = 200, double mutRate = 0.15)
+        : trainingAIType(aiType), populationSize(popSize), gamesPerMatchup(gamesPerMatch),
           maxMoves(maxMov), mutationRate(mutRate) {
         srand(static_cast<unsigned int>(time(nullptr)));
     }
