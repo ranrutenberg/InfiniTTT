@@ -11,16 +11,17 @@ An advanced implementation of Tic-Tac-Toe on an infinite board with AI opponents
 - **Multiple Play Modes**: Human vs Human, Human vs AI, AI vs AI
 
 ### 🤖 Advanced AI
-- **Minimax with Alpha-Beta Pruning**: Strategic AI that plans ahead
-- **Depth-Limited Search**: Configurable search depth (default: 3 levels)
-- **Time-Limited Computation**: 100ms thinking time per move
+- **Hybrid Evaluator AI**: Combines tactical win detection with strategic position evaluation
+- **Smart Random AI**: Random play with win/block detection (baseline)
+- **Trainable Weights**: Hybrid Evaluator learns optimal evaluation parameters
 - **Smart Move Generation**: Only considers positions adjacent to existing pieces
 
 ### 🧠 Machine Learning System
 - **Self-Play Learning**: AI improves through playing against itself
 - **Genetic Algorithm**: Evolves optimal evaluation weights
 - **Gapped Sequence Recognition**: Detects patterns like `XX_X` (4-in-a-row with gap)
-- **Position Evaluation**: Counts potential winning sequences (3+, 4+, 5)
+- **Position Evaluation**: Counts potential winning sequences in 5-cell windows
+- **Double Threat Detection**: Recognizes when multiple winning moves exist simultaneously
 - **Weight Optimization**: Learns optimal values for different patterns
 
 ### 📊 Training Features
@@ -48,26 +49,26 @@ make
 
 ### Interactive Play
 ```bash
-./tictactoe
+./InfiniTTT
 ```
 Choose player types:
 1. Human
-2. AI (Minimax)
-3. AI (Random)
+2. Smart Random AI
+3. Hybrid Evaluator AI
 
 ### AI Training Mode
-Train the AI to discover optimal strategies:
+Train the Hybrid Evaluator AI to discover optimal strategies:
 
 ```bash
 # Basic training (10 generations, 20 candidates, 6 games each)
-./tictactoe --train
+./InfiniTTT --train
 
 # Custom training
-./tictactoe --train [generations] [population] [games_per_matchup]
+./InfiniTTT --train [generations] [population] [games_per_matchup]
 
 # Examples:
-./tictactoe --train 5 10 4      # Quick test
-./tictactoe --train 20 30 10    # Serious training
+./InfiniTTT --train 5 10 4      # Quick test
+./InfiniTTT --train 20 30 10    # Serious training
 ```
 
 **Training Parameters:**
@@ -85,13 +86,19 @@ Train the AI to discover optimal strategies:
 ### Benchmark Mode
 Compare AI performance:
 ```bash
-./tictactoe --benchmark [num_games]
-./tictactoe --benchmark --all [num_games]
+./InfiniTTT --benchmark [num_games]
+./InfiniTTT --benchmark --all [num_games]
+```
+
+### Using Trained Weights
+```bash
+./InfiniTTT --use-trained-weights
+./InfiniTTT --benchmark --use-trained-weights --all 50
 ```
 
 ### Help
 ```bash
-./tictactoe --help
+./InfiniTTT --help
 ```
 
 ## How the AI Works
@@ -105,11 +112,12 @@ The AI evaluates board positions by counting potential winning sequences in **5-
 - `X___X` → 2 pieces in window (early setup)
 
 **Scoring (configurable through learning):**
-- 4-in-a-row, both ends open: **500 points** (can win multiple ways)
-- 4-in-a-row, one end blocked: **200 points** (still dangerous)
-- 3-in-a-row, both ends open: **50 points** (good potential)
-- 3-in-a-row, one end blocked: **20 points** (limited)
-- 2-in-a-row, both ends open: **5 points** (positioning)
+- 4-in-a-row, both ends open: **565 points** (can win multiple ways)
+- 4-in-a-row, one end blocked: **211 points** (still dangerous)
+- 3-in-a-row, both ends open: **40 points** (good potential)
+- 3-in-a-row, one end blocked: **19 points** (limited)
+- 2-in-a-row, both ends open: **7 points** (positioning)
+- Double threat (2+ winning moves): **10000 points** (opponent cannot defend)
 
 **Key Innovation: Gapped Sequence Recognition**
 
@@ -126,8 +134,8 @@ This makes the AI significantly stronger than naive implementations.
 
 1. **Population Creation**: Generate variations of weight configurations
    ```
-   Initial: {500, 200, 50, 20, 5}
-   Mutated: {520, 185, 55, 18, 6}
+   Initial: {565, 211, 40, 19, 7, 10000}
+   Mutated: {520, 185, 55, 18, 6, 12500}
    ```
 
 2. **Tournament**: Each AI plays every other AI (round-robin)
@@ -154,10 +162,10 @@ This makes the AI significantly stronger than naive implementations.
 - Win detection in all 4 directions
 - Position evaluation with configurable weights
 
-**AIPlayer** (`aiplayer.h/cpp`)
+**AIPlayer** (`src/ai/aiplayer.h`)
 - Abstract base class for AI implementations
-- `MinimaxAI`: Strategic planning with alpha-beta pruning
-- `RandomAI`: Baseline random player
+- `HybridEvaluatorAI`: Combines tactical and strategic play (trainable)
+- `SmartRandomAI`: Random play with win/block detection (baseline)
 
 **EvaluationWeights** (`evaluationweights.h`)
 - Configurable scoring parameters
@@ -191,25 +199,27 @@ for each occupied position:
 
 ## Configuration Files
 
-### best_weights.txt
-Stores the best learned weights:
+### hybrid_evaluator_weights.txt
+Stores the learned weights for Hybrid Evaluator AI:
 ```
-500
-200
-50
-20
-5
+565
+211
+40
+19
+7
+10000
 ```
 
-The AI automatically loads this file if it exists, allowing continuous improvement across multiple training sessions.
+The AI automatically loads this file when using `--use-trained-weights`, allowing continuous improvement across multiple training sessions.
 
 ## Examples
 
 ### Example Training Session
 ```
-$ ./tictactoe --train 5 8 4
+$ ./InfiniTTT --train 5 8 4
 
 === AI Weight Training Mode ===
+Training: Hybrid Evaluator
 
 Configuration:
   Generations: 5
@@ -219,50 +229,60 @@ Configuration:
 
 Using default weights as starting point
 Evaluation Weights:
-  4-open: 500
-  4-blocked: 200
-  3-open: 50
-  3-blocked: 20
-  2-open: 5
+  4-open: 565
+  4-blocked: 211
+  3-open: 40
+  3-blocked: 19
+  2-open: 7
+  double-threat: 10000
 
 Generation 1/5:
   Running tournament.......
   Best candidate:
     Fitness: 0.714 (W:20 L:8 D:0)
     Evaluation Weights:
-      4-open: 520
-      4-blocked: 195
-      3-open: 48
-      3-blocked: 22
-      2-open: 5
+      4-open: 580
+      4-blocked: 205
+      3-open: 38
+      3-blocked: 21
+      2-open: 7
+      double-threat: 10500
 
 [... continues for 5 generations ...]
 
-Best weights saved to best_weights.txt
+Best weights saved to hybrid_evaluator_weights.txt
+
+Use with: ./InfiniTTT --use-trained-weights
 ```
 
 ### Example Game
 ```
-$ ./tictactoe
+$ ./InfiniTTT
 
-Player 1 (X) - Select type:
+Welcome to Infinite Tic-Tac-Toe!
+
+Player 1 (X) type:
 1. Human
-2. AI (Minimax)
-3. AI (Random)
+2. Smart Random AI
+3. Hybrid Evaluator AI
+Enter choice (1-3): 3
+
+Player 2 (O) type:
+1. Human
+2. Smart Random AI
+3. Hybrid Evaluator AI
 Enter choice (1-3): 2
 
-Player 2 (O) - Select type:
-1. Human
-2. AI (Minimax)
-3. AI (Random)
-Enter choice (1-3): 2
+Game Configuration:
+Player 1 (X): AI (Hybrid Evaluator)
+Player 2 (O): AI (Smart Random)
 
-Player X (Minimax) is making a move...
+Player X (AI - Hybrid Evaluator) is making a move...
 AI played at (0, 0)
  X  0
  0
 
-Player O (Minimax) is making a move...
+Player O (AI - Smart Random) is making a move...
 AI played at (1, 0)
  X O  0
  0 1
@@ -272,15 +292,18 @@ AI played at (1, 0)
 
 ## Performance Notes
 
-### Minimax Search
-- **Depth 3**: Evaluates ~1,000 positions per move
-- **Alpha-beta pruning**: Reduces nodes by ~50-90%
-- **Time limit**: 100ms ensures responsive gameplay
+### Hybrid Evaluator AI
+- **Three-level priority system**:
+  1. Take winning moves immediately
+  2. Block opponent winning moves
+  3. Maximize position evaluation score
+- **Fast evaluation**: ~1000 positions/second
+- **Smart move generation**: Only considers adjacent cells
 
 ### Training Performance
 - **Computation**: O(n²) where n = population size
 - **Per generation**: (n × (n-1) / 2) × games × moves
-- **Bottleneck**: Minimax depth-3 search
+- **Speed**: ~10-20 games/second (depends on game length)
 
 **Optimization Tips:**
 - Start with small populations (10-15) for quick feedback
@@ -292,22 +315,24 @@ AI played at (1, 0)
 ### Custom Weight Files
 Create your own starting weights:
 ```bash
-echo "600" > my_weights.txt  # four_open
-echo "250" >> my_weights.txt # four_blocked
-echo "60" >> my_weights.txt  # three_open
-echo "25" >> my_weights.txt  # three_blocked
-echo "7" >> my_weights.txt   # two_open
-
-# Rename to best_weights.txt or modify code
+echo "600" > hybrid_evaluator_weights.txt   # four_open
+echo "250" >> hybrid_evaluator_weights.txt  # four_blocked
+echo "60" >> hybrid_evaluator_weights.txt   # three_open
+echo "25" >> hybrid_evaluator_weights.txt   # three_blocked
+echo "7" >> hybrid_evaluator_weights.txt    # two_open
+echo "10000" >> hybrid_evaluator_weights.txt # double_threat
 ```
 
 ### Benchmark Comparisons
 ```bash
-# Compare trained AI vs default
-./tictactoe --benchmark 100
+# Compare two AI types interactively
+./InfiniTTT --benchmark 100
 
-# Test all matchups
-./tictactoe --benchmark --all 50
+# Test all matchups (2x2 grid = 4 total matchups)
+./InfiniTTT --benchmark --all 50
+
+# Benchmark with trained weights
+./InfiniTTT --benchmark --use-trained-weights --all 50
 ```
 
 ## Technical Details
@@ -324,10 +349,11 @@ echo "7" >> my_weights.txt   # two_open
 - First move always at origin (0, 0)
 - Prevents exponential search space on infinite board
 
-### Alpha-Beta Pruning
-- Prunes ~60-80% of search tree
-- Best move ordering improves pruning effectiveness
-- Maintains optimal minimax result
+### AI Strategy
+- **Priority-based decision making**: Win > Block > Evaluate
+- **Window-based pattern recognition**: Analyzes 5-cell sequences
+- **Double threat detection**: Identifies multiple simultaneous winning positions
+- **Efficient move ordering**: Only evaluates adjacent positions
 
 ## Contributing
 
@@ -343,7 +369,8 @@ Potential improvements:
 - Monte Carlo Tree Search (MCTS)
 - Opening book construction
 - Parallel tournament evaluation
-- Advanced pattern recognition
+- Advanced threat space search
+- Multi-objective optimization (speed vs accuracy)
 
 ## License
 

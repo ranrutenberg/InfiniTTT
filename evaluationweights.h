@@ -25,13 +25,16 @@ struct EvaluationWeights {
     // 2 pieces in a 5-cell window (early positioning)
     int two_open = 5;         // Both ends open - minor value
 
+    // Synergy bonus for multiple winning threats
+    int double_threat = 10000;  // 2+ positions that create immediate win
+
     // Default constructor uses hand-tuned weights
     EvaluationWeights() = default;
 
     // Constructor with custom weights
-    EvaluationWeights(int four_o, int four_b, int three_o, int three_b, int two_o)
+    EvaluationWeights(int four_o, int four_b, int three_o, int three_b, int two_o, int dbl_threat = 10000)
         : four_open(four_o), four_blocked(four_b), three_open(three_o),
-          three_blocked(three_b), two_open(two_o) {}
+          three_blocked(three_b), two_open(two_o), double_threat(dbl_threat) {}
 
     // Save weights to file
     bool saveToFile(const std::string& filename) const {
@@ -42,7 +45,8 @@ struct EvaluationWeights {
              << four_blocked << "\n"
              << three_open << "\n"
              << three_blocked << "\n"
-             << two_open << "\n";
+             << two_open << "\n"
+             << double_threat << "\n";
 
         return file.good();
     }
@@ -58,6 +62,7 @@ struct EvaluationWeights {
         if (std::getline(file, line)) three_open = std::stoi(line);
         if (std::getline(file, line)) three_blocked = std::stoi(line);
         if (std::getline(file, line)) two_open = std::stoi(line);
+        if (std::getline(file, line)) double_threat = std::stoi(line);  // Backward compatible - will use default if missing
 
         return file.good() || file.eof();
     }
@@ -75,7 +80,8 @@ struct EvaluationWeights {
             mutateValue(four_blocked),
             mutateValue(three_open),
             mutateValue(three_blocked),
-            mutateValue(two_open)
+            mutateValue(two_open),
+            mutateValue(double_threat)
         );
     }
 
@@ -86,7 +92,8 @@ struct EvaluationWeights {
             (rand() % 2) ? four_blocked : other.four_blocked,
             (rand() % 2) ? three_open : other.three_open,
             (rand() % 2) ? three_blocked : other.three_blocked,
-            (rand() % 2) ? two_open : other.two_open
+            (rand() % 2) ? two_open : other.two_open,
+            (rand() % 2) ? double_threat : other.double_threat
         );
     }
 
@@ -97,7 +104,8 @@ struct EvaluationWeights {
                   << "  4-blocked: " << four_blocked << "\n"
                   << "  3-open: " << three_open << "\n"
                   << "  3-blocked: " << three_blocked << "\n"
-                  << "  2-open: " << two_open << "\n";
+                  << "  2-open: " << two_open << "\n"
+                  << "  double-threat: " << double_threat << "\n";
     }
 };
 

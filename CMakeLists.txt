@@ -14,8 +14,6 @@ add_executable(InfiniTTT
     tictactoeboard.cpp
     weighttrainer.cpp
     src/ai/ai_utils.cpp
-    src/ai/minimax_ai.cpp
-    src/ai/random_ai.cpp
     src/ai/smart_random_ai.cpp
     src/ai/hybrid_evaluator_ai.cpp
 )

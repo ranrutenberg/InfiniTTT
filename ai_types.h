@@ -6,10 +6,8 @@
 #define AI_TYPES_H
 
 enum class AIType {
-    MINIMAX,
-    RANDOM,
-    SMART_RANDOM,
-    HYBRID_EVALUATOR
+    SMART_RANDOM,         // Random + win detection (baseline)
+    HYBRID_EVALUATOR      // Tactical + strategic (trainable, strongest)
 };
 
 #endif // AI_TYPES_H

@@ -4,7 +4,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 
 #include "weighttrainer.h"
-#include "src/ai/minimax_ai.h"
 #include "src/ai/hybrid_evaluator_ai.h"
 #include <iostream>
 #include <algorithm>
@@ -12,13 +11,11 @@
 // Create AI instance for training
 std::unique_ptr<AIPlayer> WeightTrainer::createTrainingAI(const EvaluationWeights& weights) {
     switch (trainingAIType) {
-        case AIType::MINIMAX:
-            return std::make_unique<MinimaxAI>(100, 3, &weights);
         case AIType::HYBRID_EVALUATOR:
             return std::make_unique<HybridEvaluatorAI>(&weights);
         default:
             std::cerr << "Error: AI type does not support weight training\n";
-            return std::make_unique<MinimaxAI>(100, 3, &weights);
+            return std::make_unique<HybridEvaluatorAI>(&weights);
     }
 }
 

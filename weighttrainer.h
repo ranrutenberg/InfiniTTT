@@ -52,7 +52,7 @@ private:
     std::unique_ptr<AIPlayer> createTrainingAI(const EvaluationWeights& weights);
 
 public:
-    WeightTrainer(AIType aiType = AIType::MINIMAX, int popSize = 20, int gamesPerMatch = 10, int maxMov = 200, double mutRate = 0.15)
+    WeightTrainer(AIType aiType = AIType::HYBRID_EVALUATOR, int popSize = 20, int gamesPerMatch = 10, int maxMov = 200, double mutRate = 0.15)
         : trainingAIType(aiType), populationSize(popSize), gamesPerMatchup(gamesPerMatch),
           maxMoves(maxMov), mutationRate(mutRate) {
         srand(static_cast<unsigned int>(time(nullptr)));

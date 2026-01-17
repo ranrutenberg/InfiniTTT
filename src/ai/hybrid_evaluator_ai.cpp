@@ -33,6 +33,7 @@ int HybridEvaluatorAI::evaluatePosition(const TicTacToeBoard& board, char mark) 
     int score = 0;
     char opponent = (mark == 'X') ? 'O' : 'X';
     std::set<std::pair<std::pair<int, int>, std::pair<int, int>>> countedWindows;
+    std::set<std::pair<int, int>> winningMoves;  // Positions that create immediate win
 
     // Directions: horizontal, vertical, diagonal \, diagonal /
     int directions[4][2] = {{1, 0}, {0, 1}, {1, 1}, {1, -1}};
@@ -111,8 +112,20 @@ int HybridEvaluatorAI::evaluatePosition(const TicTacToeBoard& board, char mark) 
                 if (friendlyCount == 4) {
                     // 4 pieces in a 5-cell window - one move from winning
                     // Patterns: XXXX_, XXX_X, XX_XX, X_XXX, _XXXX
+
+                    // Find the empty position(s) that create a win
+                    for (int k = 0; k < 5; ++k) {
+                        int cellX = startX + k * dx;
+                        int cellY = startY + k * dy;
+                        if (!board.isPositionOccupied(cellX, cellY)) {
+                            winningMoves.insert({cellX, cellY});
+                        }
+                    }
+
                     if (openBefore && openAfter) {
                         windowScore = w.four_open;  // Can complete in the gap or extend
+                        // For open-4, both ends can also create a win if extendable
+                        // But we already counted the gap, so this is already a double threat
                     } else {
                         windowScore = w.four_blocked;  // Can still complete in the gap
                     }
@@ -136,6 +149,12 @@ int HybridEvaluatorAI::evaluatePosition(const TicTacToeBoard& board, char mark) 
                 score += windowScore;
             }
         }
+    }
+
+    // Apply double threat bonus if we have multiple winning moves
+    // This represents positions where opponent cannot defend all threats
+    if (winningMoves.size() >= 2) {
+        score += w.double_threat;
     }
 
     return score;
