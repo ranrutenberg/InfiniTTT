@@ -23,18 +23,57 @@ enum class PlayerType {
     AI
 };
 
+// Input validation helper functions
+// Read an integer from cin with validation
+// Returns true if valid integer read, false otherwise
+bool readInt(int& value) {
+    if (std::cin >> value) {
+        return true;
+    }
+    std::cin.clear();  // Clear error flags
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');  // Discard bad input
+    return false;
+}
+
+// Read integer with prompt, retry on invalid input
+int readIntWithRetry(const std::string& prompt, int minVal, int maxVal) {
+    int value;
+    while (true) {
+        std::cout << prompt;
+        if (readInt(value) && value >= minVal && value <= maxVal) {
+            return value;
+        }
+        std::cout << "Invalid input. Please enter a number between "
+                  << minVal << " and " << maxVal << ".\n";
+    }
+}
+
+// Read two integers (coordinates) with validation
+bool readCoordinates(int& x, int& y, const std::string& prompt) {
+    while (true) {
+        std::cout << prompt;
+        if (std::cin >> x >> y) {
+            return true;
+        }
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cout << "Invalid input. Please enter two integers (x y).\n";
+    }
+}
+
 // Function to create AI instance based on type
 // Pass weights pointer to enable trained weights (nullptr for default weights)
 // For HYBRID_EVALUATOR_V2: depth and topN parameters can be customized
+// debugMode enables incremental evaluation verification for v2 AI
 std::unique_ptr<AIPlayer> createAI(AIType type, const EvaluationWeights* weights = nullptr, bool verbose = false,
-                                    int depth = 2, int topN = 10) {
+                                    int depth = 2, int topN = 10, bool debugMode = false) {
     switch (type) {
         case AIType::SMART_RANDOM:
             return std::make_unique<SmartRandomAI>(2, verbose);  // Level 2 optimization
         case AIType::HYBRID_EVALUATOR:
             return std::make_unique<HybridEvaluatorAI>(weights, verbose);
         case AIType::HYBRID_EVALUATOR_V2:
-            return std::make_unique<HybridEvaluatorAIv2>(weights, depth, topN, true, false, verbose);
+            return std::make_unique<HybridEvaluatorAIv2>(weights, depth, topN, true, debugMode, verbose);
         default:
             return std::make_unique<SmartRandomAI>(2, verbose);  // Default to Smart Random
     }
@@ -142,9 +181,8 @@ AIType selectAIType(const std::string& playerName) {
     std::cout << "1. Smart Random (Random + Win Detection)\n";
     std::cout << "2. Hybrid Evaluator (Tactical + Strategic)\n";
     std::cout << "3. Hybrid Evaluator v2 (Minimax-enhanced)\n";
-    std::cout << "Enter choice (1-3): ";
-    int choice;
-    std::cin >> choice;
+
+    int choice = readIntWithRetry("Enter choice (1-3): ", 1, 3);
 
     switch (choice) {
         case 1:
@@ -154,8 +192,7 @@ AIType selectAIType(const std::string& playerName) {
         case 3:
             return AIType::HYBRID_EVALUATOR_V2;
         default:
-            std::cout << "Invalid choice. Defaulting to Smart Random.\n";
-            return AIType::SMART_RANDOM;
+            return AIType::SMART_RANDOM;  // Should never reach here
     }
 }
 
@@ -379,7 +416,7 @@ void runBenchmark(int numGames, bool interactive, bool verbose = false, bool use
 }
 
 // Interactive game mode
-void runInteractiveGame(bool verbose = false, bool useTrainedWeights = false) {
+void runInteractiveGame(bool verbose = false, bool useTrainedWeights = false, bool debugMode = false) {
     TicTacToeBoard game;
     int x, y;
     const int winningLength = 5;
@@ -393,9 +430,8 @@ void runInteractiveGame(bool verbose = false, bool useTrainedWeights = false) {
     std::cout << "2. Smart Random AI\n";
     std::cout << "3. Hybrid Evaluator AI\n";
     std::cout << "4. Hybrid Evaluator v2 AI (Minimax)\n";
-    std::cout << "Enter choice (1-4): ";
-    int p1Choice;
-    std::cin >> p1Choice;
+
+    int p1Choice = readIntWithRetry("Enter choice (1-4): ", 1, 4);
 
     PlayerType player1Type;
     AIType ai1Type = AIType::SMART_RANDOM;  // Default
@@ -417,8 +453,7 @@ void runInteractiveGame(bool verbose = false, bool useTrainedWeights = false) {
             ai1Type = AIType::HYBRID_EVALUATOR_V2;
             break;
         default:
-            std::cout << "Invalid choice. Defaulting to Human.\n";
-            player1Type = PlayerType::HUMAN;
+            player1Type = PlayerType::HUMAN;  // Should never reach here
     }
 
     // Configure Player 2 (O)
@@ -427,9 +462,8 @@ void runInteractiveGame(bool verbose = false, bool useTrainedWeights = false) {
     std::cout << "2. Smart Random AI\n";
     std::cout << "3. Hybrid Evaluator AI\n";
     std::cout << "4. Hybrid Evaluator v2 AI (Minimax)\n";
-    std::cout << "Enter choice (1-4): ";
-    int p2Choice;
-    std::cin >> p2Choice;
+
+    int p2Choice = readIntWithRetry("Enter choice (1-4): ", 1, 4);
 
     PlayerType player2Type;
     AIType ai2Type = AIType::SMART_RANDOM;  // Default
@@ -451,8 +485,7 @@ void runInteractiveGame(bool verbose = false, bool useTrainedWeights = false) {
             ai2Type = AIType::HYBRID_EVALUATOR_V2;
             break;
         default:
-            std::cout << "Invalid choice. Defaulting to Human.\n";
-            player2Type = PlayerType::HUMAN;
+            player2Type = PlayerType::HUMAN;  // Should never reach here
     }
 
     // Load weights if requested
@@ -468,9 +501,9 @@ void runInteractiveGame(bool verbose = false, bool useTrainedWeights = false) {
         }
     }
 
-    // Create AI instances if needed
-    auto ai1 = (player1Type == PlayerType::AI) ? createAI(ai1Type, ai1Weights.get(), verbose) : nullptr;
-    auto ai2 = (player2Type == PlayerType::AI) ? createAI(ai2Type, ai2Weights.get(), verbose) : nullptr;
+    // Create AI instances if needed (pass debugMode for v2 AI verification)
+    auto ai1 = (player1Type == PlayerType::AI) ? createAI(ai1Type, ai1Weights.get(), verbose, 2, 10, debugMode) : nullptr;
+    auto ai2 = (player2Type == PlayerType::AI) ? createAI(ai2Type, ai2Weights.get(), verbose, 2, 10, debugMode) : nullptr;
 
     const char player1Mark = 'X';
     const char player2Mark = 'O';
@@ -511,17 +544,17 @@ void runInteractiveGame(bool verbose = false, bool useTrainedWeights = false) {
         AIPlayer* currentAI = isPlayer1Turn ? ai1.get() : ai2.get();
 
         if (currentPlayerType == PlayerType::HUMAN) {
-            // Human player's turn
-            std::cout << "Player " << currentMark << " (Human), enter your move (x y): ";
-            std::cin >> x >> y;
+            // Human player's turn - with input validation
+            std::string prompt = "Player " + std::string(1, currentMark) + " (Human), enter your move (x y): ";
+            readCoordinates(x, y, prompt);
 
-            // Attempt to place the mark; if invalid, prompt again
+            // Attempt to place the mark; if invalid (occupied), prompt again
             if (game.placeMark(x, y)) {
                 lastMove = {x, y};  // Update last move for AI
                 gameWon = game.checkWin(x, y, winningLength);
                 isPlayer1Turn = !isPlayer1Turn;  // Switch players
             } else {
-                std::cout << "Invalid move. Try again.\n";
+                std::cout << "Position already occupied. Try again.\n";
             }
         } else {
             // AI player's turn
@@ -602,6 +635,15 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    // Scan for --debug flag (enables v2 AI incremental evaluation verification)
+    bool debugMode = false;
+    for (int i = 1; i < argc; ++i) {
+        if (std::string(argv[i]) == "--debug") {
+            debugMode = true;
+            break;
+        }
+    }
+
     // Check for help
     if (argc > 1 && (std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h")) {
         std::cout << "Infinite Tic-Tac-Toe - Usage:\n\n";
@@ -627,6 +669,9 @@ int main(int argc, char* argv[]) {
         std::cout << "Verbose mode (show AI move scores):\n";
         std::cout << "  ./InfiniTTT --verbose\n";
         std::cout << "  ./InfiniTTT --benchmark --verbose 50\n\n";
+        std::cout << "Debug mode (verify v2 AI incremental evaluation):\n";
+        std::cout << "  ./InfiniTTT --debug\n";
+        std::cout << "  Logs any mismatches between incremental and full evaluation\n\n";
         return 0;
     }
 
@@ -670,7 +715,7 @@ int main(int argc, char* argv[]) {
 
         runBenchmark(numGames, interactive, verboseAI, useTrainedWeights);
     } else {
-        runInteractiveGame(verboseAI, useTrainedWeights);
+        runInteractiveGame(verboseAI, useTrainedWeights, debugMode);
     }
 
     return 0;
