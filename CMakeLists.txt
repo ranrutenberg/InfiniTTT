@@ -16,6 +16,7 @@ add_executable(InfiniTTT
     src/ai/ai_utils.cpp
     src/ai/smart_random_ai.cpp
     src/ai/hybrid_evaluator_ai.cpp
+    src/ai/hybrid_evaluator_ai_v2.cpp
 )
 
 install(TARGETS InfiniTTT RUNTIME DESTINATION bin)

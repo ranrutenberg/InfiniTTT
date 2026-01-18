@@ -7,7 +7,8 @@
 
 enum class AIType {
     SMART_RANDOM,         // Random + win detection (baseline)
-    HYBRID_EVALUATOR      // Tactical + strategic (trainable, strongest)
+    HYBRID_EVALUATOR,     // Tactical + strategic (trainable, strongest)
+    HYBRID_EVALUATOR_V2   // Minimax-enhanced version with incremental evaluation
 };
 
 #endif // AI_TYPES_H
