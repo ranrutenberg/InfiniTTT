@@ -21,6 +21,14 @@ bool SmartRandomAI::isWinningMove(const TicTacToeBoard& board, int x, int y, cha
     return wins;
 }
 
+// Optimized helper - modifies board temporarily with make/unmake pattern
+bool SmartRandomAI::isWinningMoveInPlace(TicTacToeBoard& board, int x, int y, char playerMark, int winLength) const {
+    board.placeMarkDirect(x, y, playerMark);
+    bool wins = board.checkWinQuiet(x, y, winLength);
+    board.removeMarkDirect(x, y);
+    return wins;
+}
+
 // SmartRandomAI implementation - Optimized random player with stepwise improvements
 std::pair<int, int> SmartRandomAI::findBestMove(const TicTacToeBoard& board, char playerMark,
                                                  std::pair<int, int> lastMove) {
@@ -54,12 +62,15 @@ std::pair<int, int> SmartRandomAI::findBestMove(const TicTacToeBoard& board, cha
         return {0, 0};
     }
 
+    // Create ONE mutable board copy for all win/block checks
+    TicTacToeBoard boardCopy = board;
+
     // OPTIMIZATION LEVEL 1: Check for winning moves
     if (optimizationLevel >= 1) {
         std::vector<std::pair<int, int>> winningMoves;
 
         for (const auto& move : availableMoves) {
-            if (isWinningMove(board, move.first, move.second, playerMark)) {
+            if (isWinningMoveInPlace(boardCopy, move.first, move.second, playerMark)) {
                 winningMoves.push_back(move);
             }
         }
@@ -109,7 +120,7 @@ std::pair<int, int> SmartRandomAI::findBestMove(const TicTacToeBoard& board, cha
         std::vector<std::pair<int, int>> blockingMoves;
 
         for (const auto& move : availableMoves) {
-            if (isWinningMove(board, move.first, move.second, opponentMark)) {
+            if (isWinningMoveInPlace(boardCopy, move.first, move.second, opponentMark)) {
                 blockingMoves.push_back(move);
             }
         }

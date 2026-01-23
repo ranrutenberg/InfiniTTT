@@ -21,6 +21,9 @@ private:
     // Helper method to check if a move results in a win
     bool isWinningMove(const TicTacToeBoard& board, int x, int y, char playerMark, int winLength = 5) const;
 
+    // Optimized version that modifies board temporarily (make/unmake pattern)
+    bool isWinningMoveInPlace(TicTacToeBoard& board, int x, int y, char playerMark, int winLength = 5) const;
+
 public:
     SmartRandomAI(int level = 1, bool verbose = false)
         : AIPlayer(verbose), optimizationLevel(level) {}
