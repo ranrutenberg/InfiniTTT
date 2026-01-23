@@ -1,4 +1,4 @@
-infinittt (1.0-1) unstable; urgency=medium
+infinittt (0.1.1-1) unstable; urgency=medium
 
   * Initial release
   * Qt6-based GUI with zoomable/pannable board
