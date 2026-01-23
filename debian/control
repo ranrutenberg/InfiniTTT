@@ -1,0 +1,26 @@
+Source: infinittt
+Section: games
+Priority: optional
+Maintainer: Ran Rutenberg <ran.rutenberg@gmail.com>
+Build-Depends: debhelper (>= 10),
+               cmake (>= 3.16),
+               qt6-base-dev,
+               libqt6widgets6,
+               g++ (>= 10)
+Standards-Version: 4.6.0
+Homepage: https://github.com/ranrutenberg/InfiniTTT
+
+Package: infinittt
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Infinite Tic-Tac-Toe game with AI opponents
+ InfiniTTT is a tic-tac-toe game with an infinite board and multiple
+ AI opponents. The game includes both a command-line interface and a
+ graphical Qt-based interface.
+ .
+ Features:
+  - Infinite expandable game board
+  - Multiple AI difficulty levels (Smart Random, Hybrid Evaluator)
+  - Zoomable and pannable GUI board view
+  - Touch gesture support for mobile devices
+  - Win by getting 5 in a row

@@ -1,0 +1,11 @@
+infinittt (1.0-1) unstable; urgency=medium
+
+  * Initial release
+  * Qt6-based GUI with zoomable/pannable board
+  * Command-line interface
+  * Multiple AI opponents (Smart Random, Hybrid Evaluator, Hybrid Evaluator V2)
+  * Configurable AI weight files
+  * Automatic first move placement
+  * Touch gesture support for Android compatibility
+
+ -- Ran Rutenberg <ran.rutenberg@gmail.com>  Thu, 23 Jan 2025 15:30:00 +0000

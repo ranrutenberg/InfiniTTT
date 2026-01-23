@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=InfiniTTT
+GenericName=Infinite Tic-Tac-Toe
+Comment=Play Tic-Tac-Toe with infinite board and AI opponents
+Exec=InfiniTTT_GUI
+Icon=infinittt
+Terminal=false
+Categories=Game;BoardGame;
+Keywords=game;tictactoe;board;ai;

@@ -20,3 +20,20 @@ CMakeFiles/
 cmake_install.cmake
 Makefile
 compile_commands.json
+
+# Debian packaging build artifacts
+obj-x86_64-linux-gnu/
+debian/infinittt/
+debian/.debhelper/
+debian/files
+debian/*.log
+debian/*.substvars
+debian/*-stamp
+
+# Generated packages (in parent directory)
+../*.deb
+../*.ddeb
+../*.buildinfo
+../*.changes
+../*.dsc
+../*.tar.*

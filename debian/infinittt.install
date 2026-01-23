@@ -1,0 +1,4 @@
+build/InfiniTTT_CLI usr/bin/
+build/InfiniTTT_GUI usr/bin/
+hybrid_evaluator_weights.txt usr/share/infinittt/
+hybrid_evaluator_v2_weights.txt usr/share/infinittt/
