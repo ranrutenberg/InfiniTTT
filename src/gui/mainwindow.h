@@ -2,8 +2,7 @@
 // SPDX-FileCopyrightText: 2024 Ran Rutenberg <ran.rutenberg@gmail.com>
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 #include <QMainWindow>
 #include <QLabel>
@@ -42,5 +41,3 @@ private:
     char currentPlayer_ = 'X';
     bool gameActive_ = false;
 };
-
-#endif // MAINWINDOW_H

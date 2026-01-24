@@ -3,8 +3,8 @@
 // SPDX-FileCopyrightText: 2024 Ran Rutenberg <ran.rutenberg@gmail.com>
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef TICTACTOEBOARD_H
-#define TICTACTOEBOARD_H
+#pragma once
+
 #include <map>
 #include <utility>
 
@@ -31,5 +31,3 @@ public:
     void removeMarkDirect(int x, int y) { board.erase({x, y}); }
     char getCurrentPlayer() const { return currentPlayer; }
 };
-
-#endif // TICTACTOEBOARD_H

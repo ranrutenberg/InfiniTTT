@@ -2,8 +2,7 @@
 // SPDX-FileCopyrightText: 2024 Ran Rutenberg <ran.rutenberg@gmail.com>
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef GAMECONTROLLER_H
-#define GAMECONTROLLER_H
+#pragma once
 
 #include <QObject>
 #include <QTimer>
@@ -80,5 +79,3 @@ private:
     QString hybridWeightsPath_ = "hybrid_evaluator_weights.txt";
     QString hybridV2WeightsPath_ = "hybrid_evaluator_v2_weights.txt";
 };
-
-#endif // GAMECONTROLLER_H
