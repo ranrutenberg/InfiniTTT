@@ -29,12 +29,25 @@ bool SmartRandomAI::isWinningMoveInPlace(TicTacToeBoard& board, int x, int y, ch
     return wins;
 }
 
-// Count how many positions in candidates become winning moves after placing at (x, y)
+// Count how many positions become winning moves after placing at (x, y).
+// Checks candidates PLUS neighbors of (x, y), because winning extensions of the
+// new sequence may lie adjacent to the hypothetical position and not yet be in
+// the maintained availableMoves set.
 int SmartRandomAI::countWinningFollowUps(TicTacToeBoard& board, int x, int y, char playerMark,
                                          const std::set<std::pair<int, int>>& candidates) const {
     board.placeMarkDirect(x, y, playerMark);
+
+    // Expand candidate set with the 8 neighbors of (x, y)
+    std::set<std::pair<int, int>> expanded = candidates;
+    for (int dx = -1; dx <= 1; ++dx) {
+        for (int dy = -1; dy <= 1; ++dy) {
+            if (dx == 0 && dy == 0) continue;
+            expanded.insert({x + dx, y + dy});
+        }
+    }
+
     int count = 0;
-    for (const auto& candidate : candidates) {
+    for (const auto& candidate : expanded) {
         if (candidate.first == x && candidate.second == y) continue;
         if (board.isPositionOccupied(candidate.first, candidate.second)) continue;
         board.placeMarkDirect(candidate.first, candidate.second, playerMark);
