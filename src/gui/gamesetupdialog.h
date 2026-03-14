@@ -19,14 +19,18 @@ public:
 private slots:
     void onPlayer1TypeChanged(int index);
     void onPlayer2TypeChanged(int index);
+    void onPlayer1AITypeChanged(int index);
+    void onPlayer2AITypeChanged(int index);
 
 private:
     void setupUI();
 
     QComboBox* player1TypeCombo_;
     QComboBox* player1AITypeCombo_;
+    QComboBox* player1LevelCombo_;
     QComboBox* player2TypeCombo_;
     QComboBox* player2AITypeCombo_;
+    QComboBox* player2LevelCombo_;
 };
 
 #endif // GAMESETUPDIALOG_H

@@ -17,6 +17,7 @@
 struct PlayerConfig {
     bool isHuman = true;
     AIType aiType = AIType::SMART_RANDOM;
+    int smartRandomLevel = 2;  // Optimization level for SmartRandomAI (0-3)
 };
 
 struct GameConfig {
@@ -57,7 +58,7 @@ private slots:
 private:
     void checkGameState(int lastX, int lastY);
     void switchTurn();
-    std::unique_ptr<AIPlayer> createAIPlayer(AIType type, const EvaluationWeights* weights);
+    std::unique_ptr<AIPlayer> createAIPlayer(const PlayerConfig& playerConfig, const EvaluationWeights* weights);
     std::unique_ptr<EvaluationWeights> loadWeightsForAI(AIType type);
     QString getWeightFilename(AIType type) const;
 

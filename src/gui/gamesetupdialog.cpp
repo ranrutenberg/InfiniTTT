@@ -32,10 +32,21 @@ void GameSetupDialog::setupUI() {
     player1AITypeCombo_->addItem("Hybrid Evaluator v2 (Minimax)");
     player1AITypeCombo_->setEnabled(false);
 
+    player1LevelCombo_ = new QComboBox(this);
+    player1LevelCombo_->addItem("Level 0: Pure random");
+    player1LevelCombo_->addItem("Level 1: Win detection");
+    player1LevelCombo_->addItem("Level 2: Win + Block");
+    player1LevelCombo_->addItem("Level 3: Win + Block + Double threat");
+    player1LevelCombo_->addItem("Level 4: Win + Block + Fork + Block fork");
+    player1LevelCombo_->setCurrentIndex(2);
+    player1LevelCombo_->setEnabled(false);
+
     player1Layout->addWidget(new QLabel("Type:", this));
     player1Layout->addWidget(player1TypeCombo_);
     player1Layout->addWidget(new QLabel("AI:", this));
     player1Layout->addWidget(player1AITypeCombo_);
+    player1Layout->addWidget(new QLabel("Level:", this));
+    player1Layout->addWidget(player1LevelCombo_);
 
     // Player 2 group
     auto* player2Group = new QGroupBox("Player 2 (O)", this);
@@ -52,10 +63,21 @@ void GameSetupDialog::setupUI() {
     player2AITypeCombo_->addItem("Hybrid Evaluator v2 (Minimax)");
     player2AITypeCombo_->setCurrentIndex(1);  // Default to Hybrid Evaluator
 
+    player2LevelCombo_ = new QComboBox(this);
+    player2LevelCombo_->addItem("Level 0: Pure random");
+    player2LevelCombo_->addItem("Level 1: Win detection");
+    player2LevelCombo_->addItem("Level 2: Win + Block");
+    player2LevelCombo_->addItem("Level 3: Win + Block + Double threat");
+    player2LevelCombo_->addItem("Level 4: Win + Block + Fork + Block fork");
+    player2LevelCombo_->setCurrentIndex(2);
+    player2LevelCombo_->setEnabled(false);  // Disabled: player2 defaults to Hybrid Evaluator
+
     player2Layout->addWidget(new QLabel("Type:", this));
     player2Layout->addWidget(player2TypeCombo_);
     player2Layout->addWidget(new QLabel("AI:", this));
     player2Layout->addWidget(player2AITypeCombo_);
+    player2Layout->addWidget(new QLabel("Level:", this));
+    player2Layout->addWidget(player2LevelCombo_);
 
     // Buttons
     auto* buttonLayout = new QHBoxLayout();
@@ -75,6 +97,10 @@ void GameSetupDialog::setupUI() {
             this, &GameSetupDialog::onPlayer1TypeChanged);
     connect(player2TypeCombo_, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &GameSetupDialog::onPlayer2TypeChanged);
+    connect(player1AITypeCombo_, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &GameSetupDialog::onPlayer1AITypeChanged);
+    connect(player2AITypeCombo_, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, &GameSetupDialog::onPlayer2AITypeChanged);
     connect(okButton, &QPushButton::clicked, this, &QDialog::accept);
     connect(cancelButton, &QPushButton::clicked, this, &QDialog::reject);
 
@@ -82,11 +108,23 @@ void GameSetupDialog::setupUI() {
 }
 
 void GameSetupDialog::onPlayer1TypeChanged(int index) {
-    player1AITypeCombo_->setEnabled(index == 1);
+    bool isAI = (index == 1);
+    player1AITypeCombo_->setEnabled(isAI);
+    player1LevelCombo_->setEnabled(isAI && player1AITypeCombo_->currentIndex() == 0);
 }
 
 void GameSetupDialog::onPlayer2TypeChanged(int index) {
-    player2AITypeCombo_->setEnabled(index == 1);
+    bool isAI = (index == 1);
+    player2AITypeCombo_->setEnabled(isAI);
+    player2LevelCombo_->setEnabled(isAI && player2AITypeCombo_->currentIndex() == 0);
+}
+
+void GameSetupDialog::onPlayer1AITypeChanged(int index) {
+    player1LevelCombo_->setEnabled(player1TypeCombo_->currentIndex() == 1 && index == 0);
+}
+
+void GameSetupDialog::onPlayer2AITypeChanged(int index) {
+    player2LevelCombo_->setEnabled(player2TypeCombo_->currentIndex() == 1 && index == 0);
 }
 
 GameConfig GameSetupDialog::getConfig() const {
@@ -94,9 +132,11 @@ GameConfig GameSetupDialog::getConfig() const {
 
     config.player1.isHuman = (player1TypeCombo_->currentIndex() == 0);
     config.player1.aiType = static_cast<AIType>(player1AITypeCombo_->currentIndex());
+    config.player1.smartRandomLevel = player1LevelCombo_->currentIndex();
 
     config.player2.isHuman = (player2TypeCombo_->currentIndex() == 0);
     config.player2.aiType = static_cast<AIType>(player2AITypeCombo_->currentIndex());
+    config.player2.smartRandomLevel = player2LevelCombo_->currentIndex();
 
     return config;
 }

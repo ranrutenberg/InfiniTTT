@@ -36,12 +36,12 @@ void GameController::startNewGame(const GameConfig& config) {
 
     if (!config_.player1.isHuman) {
         weights1_ = loadWeightsForAI(config_.player1.aiType);
-        player1AI_ = createAIPlayer(config_.player1.aiType, weights1_.get());
+        player1AI_ = createAIPlayer(config_.player1, weights1_.get());
     }
 
     if (!config_.player2.isHuman) {
         weights2_ = loadWeightsForAI(config_.player2.aiType);
-        player2AI_ = createAIPlayer(config_.player2.aiType, weights2_.get());
+        player2AI_ = createAIPlayer(config_.player2, weights2_.get());
     }
 
     emit turnChanged(currentPlayer_);
@@ -135,16 +135,16 @@ void GameController::switchTurn() {
     }
 }
 
-std::unique_ptr<AIPlayer> GameController::createAIPlayer(AIType type, const EvaluationWeights* weights) {
-    switch (type) {
+std::unique_ptr<AIPlayer> GameController::createAIPlayer(const PlayerConfig& playerConfig, const EvaluationWeights* weights) {
+    switch (playerConfig.aiType) {
         case AIType::SMART_RANDOM:
-            return std::make_unique<SmartRandomAI>(2, false);
+            return std::make_unique<SmartRandomAI>(playerConfig.smartRandomLevel, false);
         case AIType::HYBRID_EVALUATOR:
             return std::make_unique<HybridEvaluatorAI>(weights, false);
         case AIType::HYBRID_EVALUATOR_V2:
             return std::make_unique<HybridEvaluatorAIv2>(weights, 2, 10, true, false, false);
         default:
-            return std::make_unique<SmartRandomAI>(2, false);
+            return std::make_unique<SmartRandomAI>(playerConfig.smartRandomLevel, false);
     }
 }
 

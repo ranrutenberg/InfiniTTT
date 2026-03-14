@@ -29,6 +29,23 @@ bool SmartRandomAI::isWinningMoveInPlace(TicTacToeBoard& board, int x, int y, ch
     return wins;
 }
 
+// Count how many positions in candidates become winning moves after placing at (x, y)
+int SmartRandomAI::countWinningFollowUps(TicTacToeBoard& board, int x, int y, char playerMark,
+                                         const std::set<std::pair<int, int>>& candidates) const {
+    board.placeMarkDirect(x, y, playerMark);
+    int count = 0;
+    for (const auto& candidate : candidates) {
+        if (candidate.first == x && candidate.second == y) continue;
+        if (board.isPositionOccupied(candidate.first, candidate.second)) continue;
+        board.placeMarkDirect(candidate.first, candidate.second, playerMark);
+        bool wins = board.checkWinQuiet(candidate.first, candidate.second, 5);
+        board.removeMarkDirect(candidate.first, candidate.second);
+        if (wins) ++count;
+    }
+    board.removeMarkDirect(x, y);
+    return count;
+}
+
 // SmartRandomAI implementation - Optimized random player with stepwise improvements
 std::pair<int, int> SmartRandomAI::findBestMove(const TicTacToeBoard& board, char playerMark,
                                                  std::pair<int, int> lastMove) {
@@ -164,7 +181,97 @@ std::pair<int, int> SmartRandomAI::findBestMove(const TicTacToeBoard& board, cha
         }
     }
 
-    // No winning or blocking move found (or optimization disabled), pick random move
+    // OPTIMIZATION LEVEL 3: Create a double threat (fork)
+    // A double threat move leaves >= 2 winning follow-up positions, e.g. an open triplet _xxx_
+    if (optimizationLevel >= 3) {
+        std::vector<std::pair<int, int>> doubleThreatMoves;
+
+        for (const auto& move : availableMoves) {
+            if (countWinningFollowUps(boardCopy, move.first, move.second, playerMark, availableMoves) >= 2) {
+                doubleThreatMoves.push_back(move);
+            }
+        }
+
+        if (!doubleThreatMoves.empty()) {
+            if (verboseMode) {
+                std::cout << "\n══════════════════════════════════════════════════════\n";
+                std::cout << "[SmartRandomAI Move Analysis - Player " << playerMark << "]\n";
+                std::cout << "══════════════════════════════════════════════════════\n";
+                std::cout << "Checked " << availableMoves.size() << " available moves\n";
+                std::cout << "Double-threat moves found: " << doubleThreatMoves.size() << "\n";
+                for (const auto& move : doubleThreatMoves) {
+                    std::cout << "  - (" << move.first << ", " << move.second << ")\n";
+                }
+            }
+
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<> dis(0, doubleThreatMoves.size() - 1);
+            auto chosenMove = doubleThreatMoves[dis(gen)];
+
+            if (verboseMode) {
+                std::cout << "\nSelected double-threat move: (" << chosenMove.first << ", " << chosenMove.second << ")\n";
+                std::cout << "══════════════════════════════════════════════════════\n\n";
+            }
+
+            availableMoves.erase(chosenMove);
+            for (int i = chosenMove.first - 1; i <= chosenMove.first + 1; ++i) {
+                for (int j = chosenMove.second - 1; j <= chosenMove.second + 1; ++j) {
+                    if (i == chosenMove.first && j == chosenMove.second) continue;
+                    availableMoves.insert({i, j});
+                }
+            }
+
+            return chosenMove;
+        }
+    }
+
+    // OPTIMIZATION LEVEL 4: Block opponent double threats (fork prevention)
+    if (optimizationLevel >= 4) {
+        char opponentMark = (playerMark == 'X') ? 'O' : 'X';
+        std::vector<std::pair<int, int>> blockForkMoves;
+
+        for (const auto& move : availableMoves) {
+            if (countWinningFollowUps(boardCopy, move.first, move.second, opponentMark, availableMoves) >= 2) {
+                blockForkMoves.push_back(move);
+            }
+        }
+
+        if (!blockForkMoves.empty()) {
+            if (verboseMode) {
+                std::cout << "\n══════════════════════════════════════════════════════\n";
+                std::cout << "[SmartRandomAI Move Analysis - Player " << playerMark << "]\n";
+                std::cout << "══════════════════════════════════════════════════════\n";
+                std::cout << "Checked " << availableMoves.size() << " available moves\n";
+                std::cout << "Opponent fork-blocking moves found: " << blockForkMoves.size() << "\n";
+                for (const auto& move : blockForkMoves) {
+                    std::cout << "  - (" << move.first << ", " << move.second << ")\n";
+                }
+            }
+
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<> dis(0, blockForkMoves.size() - 1);
+            auto chosenMove = blockForkMoves[dis(gen)];
+
+            if (verboseMode) {
+                std::cout << "\nSelected fork-blocking move: (" << chosenMove.first << ", " << chosenMove.second << ")\n";
+                std::cout << "══════════════════════════════════════════════════════\n\n";
+            }
+
+            availableMoves.erase(chosenMove);
+            for (int i = chosenMove.first - 1; i <= chosenMove.first + 1; ++i) {
+                for (int j = chosenMove.second - 1; j <= chosenMove.second + 1; ++j) {
+                    if (i == chosenMove.first && j == chosenMove.second) continue;
+                    availableMoves.insert({i, j});
+                }
+            }
+
+            return chosenMove;
+        }
+    }
+
+    // No winning, blocking, fork, or fork-blocking move found (or optimization disabled), pick random move
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(0, availableMoves.size() - 1);

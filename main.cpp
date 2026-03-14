@@ -66,16 +66,17 @@ bool readCoordinates(int& x, int& y, const std::string& prompt) {
 // For HYBRID_EVALUATOR_V2: depth and topN parameters can be customized
 // debugMode enables incremental evaluation verification for v2 AI
 std::unique_ptr<AIPlayer> createAI(AIType type, const EvaluationWeights* weights = nullptr, bool verbose = false,
-                                    int depth = 2, int topN = 10, bool debugMode = false) {
+                                    int depth = 2, int topN = 10, bool debugMode = false,
+                                    int smartRandomLevel = 2) {
     switch (type) {
         case AIType::SMART_RANDOM:
-            return std::make_unique<SmartRandomAI>(2, verbose);  // Level 2 optimization
+            return std::make_unique<SmartRandomAI>(smartRandomLevel, verbose);
         case AIType::HYBRID_EVALUATOR:
             return std::make_unique<HybridEvaluatorAI>(weights, verbose);
         case AIType::HYBRID_EVALUATOR_V2:
             return std::make_unique<HybridEvaluatorAIv2>(weights, depth, topN, true, debugMode, verbose);
         default:
-            return std::make_unique<SmartRandomAI>(2, verbose);  // Default to Smart Random
+            return std::make_unique<SmartRandomAI>(smartRandomLevel, verbose);
     }
 }
 
@@ -130,8 +131,8 @@ char runSingleGame(AIType ai1Type, AIType ai2Type, bool quiet = false, bool verb
     const int maxMoves = 1000;  // Prevent infinite games
     int moveCount = 0;
 
-    auto ai1 = createAI(ai1Type, nullptr, verbose);
-    auto ai2 = createAI(ai2Type, nullptr, verbose);
+    auto ai1 = createAI(ai1Type, nullptr, verbose, 2, 10, false, 2);
+    auto ai2 = createAI(ai2Type, nullptr, verbose, 2, 10, false, 2);
 
     const char player1Mark = 'X';
     const char player2Mark = 'O';
@@ -173,6 +174,17 @@ char runSingleGame(AIType ai1Type, AIType ai2Type, bool quiet = false, bool verb
     }
 
     return 'D';  // Draw
+}
+
+// Prompt for Smart Random optimization level
+int selectSmartRandomLevel() {
+    std::cout << "  Select optimization level:\n";
+    std::cout << "  0. Pure random\n";
+    std::cout << "  1. Win detection\n";
+    std::cout << "  2. Win + Block\n";
+    std::cout << "  3. Win + Block + Double threat\n";
+    std::cout << "  4. Win + Block + Fork + Block fork\n";
+    return readIntWithRetry("  Enter level (0-4): ", 0, 4);
 }
 
 // Get AI type from user selection
@@ -228,14 +240,15 @@ bool checkWinSilent(TicTacToeBoard& game, int x, int y, int winningLength) {
 // Run a single game and return winner + move count
 std::pair<char, int> runSingleGameWithStats(AIType ai1Type, AIType ai2Type, bool verbose = false,
                                              const EvaluationWeights* ai1Weights = nullptr,
-                                             const EvaluationWeights* ai2Weights = nullptr) {
+                                             const EvaluationWeights* ai2Weights = nullptr,
+                                             int ai1SmartRandomLevel = 2, int ai2SmartRandomLevel = 2) {
     TicTacToeBoard game;
     const int winningLength = 5;
     const int maxMoves = 1000;
     int moveCount = 0;
 
-    auto ai1 = createAI(ai1Type, ai1Weights, verbose);
-    auto ai2 = createAI(ai2Type, ai2Weights, verbose);
+    auto ai1 = createAI(ai1Type, ai1Weights, verbose, 2, 10, false, ai1SmartRandomLevel);
+    auto ai2 = createAI(ai2Type, ai2Weights, verbose, 2, 10, false, ai2SmartRandomLevel);
 
     const char player1Mark = 'X';
     const char player2Mark = 'O';
@@ -280,10 +293,15 @@ void runBenchmark(int numGames, bool interactive, bool verbose = false, bool use
 
     AIType ai1Type, ai2Type;
 
+    int ai1SmartRandomLevel = 2;
+    int ai2SmartRandomLevel = 2;
+
     if (interactive) {
         std::cout << "\nYou can choose which AI types to compare.\n";
         ai1Type = selectAIType("Player X");
+        if (ai1Type == AIType::SMART_RANDOM) ai1SmartRandomLevel = selectSmartRandomLevel();
         ai2Type = selectAIType("Player O");
+        if (ai2Type == AIType::SMART_RANDOM) ai2SmartRandomLevel = selectSmartRandomLevel();
 
         std::cout << "\nHow many games to run? (default 50): ";
         std::string input;
@@ -350,7 +368,8 @@ void runBenchmark(int numGames, bool interactive, bool verbose = false, bool use
     for (int game = 0; game < numGames; game++) {
         auto [result, moves] = runSingleGameWithStats(ai1Type, ai2Type, verbose,
                                                        aiWeights[ai1Type].get(),
-                                                       aiWeights[ai2Type].get());
+                                                       aiWeights[ai2Type].get(),
+                                                       ai1SmartRandomLevel, ai2SmartRandomLevel);
 
         if (result == 'X') stats.xWins++;
         else if (result == 'O') stats.oWins++;
@@ -436,6 +455,9 @@ void runInteractiveGame(bool verbose = false, bool useTrainedWeights = false, bo
     PlayerType player1Type;
     AIType ai1Type = AIType::SMART_RANDOM;  // Default
 
+    int ai1SmartRandomLevel = 2;
+    int ai2SmartRandomLevel = 2;
+
     switch (p1Choice) {
         case 1:
             player1Type = PlayerType::HUMAN;
@@ -443,6 +465,7 @@ void runInteractiveGame(bool verbose = false, bool useTrainedWeights = false, bo
         case 2:
             player1Type = PlayerType::AI;
             ai1Type = AIType::SMART_RANDOM;
+            ai1SmartRandomLevel = selectSmartRandomLevel();
             break;
         case 3:
             player1Type = PlayerType::AI;
@@ -475,6 +498,7 @@ void runInteractiveGame(bool verbose = false, bool useTrainedWeights = false, bo
         case 2:
             player2Type = PlayerType::AI;
             ai2Type = AIType::SMART_RANDOM;
+            ai2SmartRandomLevel = selectSmartRandomLevel();
             break;
         case 3:
             player2Type = PlayerType::AI;
@@ -502,8 +526,8 @@ void runInteractiveGame(bool verbose = false, bool useTrainedWeights = false, bo
     }
 
     // Create AI instances if needed (pass debugMode for v2 AI verification)
-    auto ai1 = (player1Type == PlayerType::AI) ? createAI(ai1Type, ai1Weights.get(), verbose, 2, 10, debugMode) : nullptr;
-    auto ai2 = (player2Type == PlayerType::AI) ? createAI(ai2Type, ai2Weights.get(), verbose, 2, 10, debugMode) : nullptr;
+    auto ai1 = (player1Type == PlayerType::AI) ? createAI(ai1Type, ai1Weights.get(), verbose, 2, 10, debugMode, ai1SmartRandomLevel) : nullptr;
+    auto ai2 = (player2Type == PlayerType::AI) ? createAI(ai2Type, ai2Weights.get(), verbose, 2, 10, debugMode, ai2SmartRandomLevel) : nullptr;
 
     const char player1Mark = 'X';
     const char player2Mark = 'O';

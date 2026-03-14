@@ -12,7 +12,8 @@ class TicTacToeBoard;
 // Smart Random AI implementation - random with stepwise optimizations
 // Level 1: Check for winning moves first
 // Level 2: Block opponent winning moves
-// Level 3: (Future) Prioritize center positions
+// Level 3: Create double threats (moves that leave >= 2 winning follow-ups, e.g. open triplet _xxx_)
+// Level 4: Block opponent double threats (fork prevention)
 class SmartRandomAI : public AIPlayer {
 private:
     std::set<std::pair<int, int>> availableMoves;  // Maintained internally by AI
@@ -23,6 +24,10 @@ private:
 
     // Optimized version that modifies board temporarily (make/unmake pattern)
     bool isWinningMoveInPlace(TicTacToeBoard& board, int x, int y, char playerMark, int winLength = 5) const;
+
+    // Returns the number of winning follow-up moves after placing at (x, y)
+    int countWinningFollowUps(TicTacToeBoard& board, int x, int y, char playerMark,
+                              const std::set<std::pair<int, int>>& candidates) const;
 
 public:
     SmartRandomAI(int level = 1, bool verbose = false)
