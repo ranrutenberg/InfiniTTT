@@ -284,6 +284,97 @@ std::pair<int, int> SmartRandomAI::findBestMove(const TicTacToeBoard& board, cha
         }
     }
 
+    // OPTIMIZATION LEVEL 5: Create a second-order double threat
+    // A second-order double threat creates >= 2 open-3 sequences simultaneously.
+    // The opponent can block at most one, so the other becomes a first-order double threat.
+    if (optimizationLevel >= 5) {
+        std::vector<std::pair<int, int>> doubleOpenThreeMoves;
+
+        for (const auto& move : availableMoves) {
+            if (AIUtils::countOpenThreesAtPosition(boardCopy, move.first, move.second, playerMark) >= 2) {
+                doubleOpenThreeMoves.push_back(move);
+            }
+        }
+
+        if (!doubleOpenThreeMoves.empty()) {
+            if (verboseMode) {
+                std::cout << "\n══════════════════════════════════════════════════════\n";
+                std::cout << "[SmartRandomAI Move Analysis - Player " << playerMark << "]\n";
+                std::cout << "══════════════════════════════════════════════════════\n";
+                std::cout << "Checked " << availableMoves.size() << " available moves\n";
+                std::cout << "Second-order double-threat moves found: " << doubleOpenThreeMoves.size() << "\n";
+                for (const auto& move : doubleOpenThreeMoves) {
+                    std::cout << "  - (" << move.first << ", " << move.second << ")\n";
+                }
+            }
+
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<> dis(0, doubleOpenThreeMoves.size() - 1);
+            auto chosenMove = doubleOpenThreeMoves[dis(gen)];
+
+            if (verboseMode) {
+                std::cout << "\nSelected second-order double-threat move: (" << chosenMove.first << ", " << chosenMove.second << ")\n";
+                std::cout << "══════════════════════════════════════════════════════\n\n";
+            }
+
+            availableMoves.erase(chosenMove);
+            for (int i = chosenMove.first - 1; i <= chosenMove.first + 1; ++i) {
+                for (int j = chosenMove.second - 1; j <= chosenMove.second + 1; ++j) {
+                    if (i == chosenMove.first && j == chosenMove.second) continue;
+                    availableMoves.insert({i, j});
+                }
+            }
+
+            return chosenMove;
+        }
+    }
+
+    // OPTIMIZATION LEVEL 6: Block opponent second-order double threats
+    if (optimizationLevel >= 6) {
+        char opponentMark = (playerMark == 'X') ? 'O' : 'X';
+        std::vector<std::pair<int, int>> blockDoubleOpenThreeMoves;
+
+        for (const auto& move : availableMoves) {
+            if (AIUtils::countOpenThreesAtPosition(boardCopy, move.first, move.second, opponentMark) >= 2) {
+                blockDoubleOpenThreeMoves.push_back(move);
+            }
+        }
+
+        if (!blockDoubleOpenThreeMoves.empty()) {
+            if (verboseMode) {
+                std::cout << "\n══════════════════════════════════════════════════════\n";
+                std::cout << "[SmartRandomAI Move Analysis - Player " << playerMark << "]\n";
+                std::cout << "══════════════════════════════════════════════════════\n";
+                std::cout << "Checked " << availableMoves.size() << " available moves\n";
+                std::cout << "Opponent second-order double-threat blocking moves found: " << blockDoubleOpenThreeMoves.size() << "\n";
+                for (const auto& move : blockDoubleOpenThreeMoves) {
+                    std::cout << "  - (" << move.first << ", " << move.second << ")\n";
+                }
+            }
+
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<> dis(0, blockDoubleOpenThreeMoves.size() - 1);
+            auto chosenMove = blockDoubleOpenThreeMoves[dis(gen)];
+
+            if (verboseMode) {
+                std::cout << "\nSelected second-order double-threat block: (" << chosenMove.first << ", " << chosenMove.second << ")\n";
+                std::cout << "══════════════════════════════════════════════════════\n\n";
+            }
+
+            availableMoves.erase(chosenMove);
+            for (int i = chosenMove.first - 1; i <= chosenMove.first + 1; ++i) {
+                for (int j = chosenMove.second - 1; j <= chosenMove.second + 1; ++j) {
+                    if (i == chosenMove.first && j == chosenMove.second) continue;
+                    availableMoves.insert({i, j});
+                }
+            }
+
+            return chosenMove;
+        }
+    }
+
     // No winning, blocking, fork, or fork-blocking move found (or optimization disabled), pick random move
     std::random_device rd;
     std::mt19937 gen(rd());

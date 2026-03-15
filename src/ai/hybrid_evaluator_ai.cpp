@@ -287,7 +287,97 @@ std::pair<int, int> HybridEvaluatorAI::findBestMove(const TicTacToeBoard& board,
 
     if (verboseMode) {
         std::cout << "Priority 2: Blocking moves - 0 found\n";
-        std::cout << "Priority 3: Position evaluation\n";
+    }
+
+    // PRIORITY LEVEL 2.5: Create a second-order double threat (double open-3 fork)
+    // A move that simultaneously creates >= 2 open-3 sequences. The opponent can block
+    // at most one, so the other will become a first-order double threat next turn.
+    {
+        std::vector<std::pair<int, int>> doubleOpenThreeMoves;
+        TicTacToeBoard boardCopy2 = board;
+
+        for (const auto& move : availableMoves) {
+            if (AIUtils::countOpenThreesAtPosition(boardCopy2, move.first, move.second, playerMark) >= 2) {
+                doubleOpenThreeMoves.push_back(move);
+            }
+        }
+
+        if (!doubleOpenThreeMoves.empty()) {
+            if (verboseMode) {
+                std::cout << "Priority 2.5: Second-order double-threat moves - " << doubleOpenThreeMoves.size() << " found\n";
+                for (const auto& move : doubleOpenThreeMoves) {
+                    std::cout << "  - (" << move.first << ", " << move.second << ")\n";
+                }
+            }
+
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<> dis(0, doubleOpenThreeMoves.size() - 1);
+            auto chosenMove = doubleOpenThreeMoves[dis(gen)];
+
+            if (verboseMode) {
+                std::cout << "Selected second-order double-threat move: (" << chosenMove.first << ", " << chosenMove.second << ")\n\n";
+            }
+
+            availableMoves.erase(chosenMove);
+            for (int i = chosenMove.first - 1; i <= chosenMove.first + 1; ++i) {
+                for (int j = chosenMove.second - 1; j <= chosenMove.second + 1; ++j) {
+                    if (i == chosenMove.first && j == chosenMove.second) continue;
+                    availableMoves.insert({i, j});
+                }
+            }
+
+            return chosenMove;
+        }
+
+        if (verboseMode) {
+            std::cout << "Priority 2.5: Second-order double-threat moves - 0 found\n";
+        }
+    }
+
+    // PRIORITY LEVEL 2.7: Block opponent second-order double threat
+    {
+        std::vector<std::pair<int, int>> blockDoubleOpenThreeMoves;
+        TicTacToeBoard boardCopy3 = board;
+
+        for (const auto& move : availableMoves) {
+            if (AIUtils::countOpenThreesAtPosition(boardCopy3, move.first, move.second, opponentMark) >= 2) {
+                blockDoubleOpenThreeMoves.push_back(move);
+            }
+        }
+
+        if (!blockDoubleOpenThreeMoves.empty()) {
+            if (verboseMode) {
+                std::cout << "Priority 2.7: Block opponent second-order double-threat - " << blockDoubleOpenThreeMoves.size() << " found\n";
+                for (const auto& move : blockDoubleOpenThreeMoves) {
+                    std::cout << "  Blocking at (" << move.first << ", " << move.second << ")\n";
+                }
+            }
+
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_int_distribution<> dis(0, blockDoubleOpenThreeMoves.size() - 1);
+            auto chosenMove = blockDoubleOpenThreeMoves[dis(gen)];
+
+            if (verboseMode) {
+                std::cout << "Selected second-order double-threat block: (" << chosenMove.first << ", " << chosenMove.second << ")\n\n";
+            }
+
+            availableMoves.erase(chosenMove);
+            for (int i = chosenMove.first - 1; i <= chosenMove.first + 1; ++i) {
+                for (int j = chosenMove.second - 1; j <= chosenMove.second + 1; ++j) {
+                    if (i == chosenMove.first && j == chosenMove.second) continue;
+                    availableMoves.insert({i, j});
+                }
+            }
+
+            return chosenMove;
+        }
+
+        if (verboseMode) {
+            std::cout << "Priority 2.7: Block opponent second-order double-threat - 0 found\n";
+            std::cout << "Priority 3: Position evaluation\n";
+        }
     }
 
     // PRIORITY LEVEL 3: Evaluate all moves using position scoring

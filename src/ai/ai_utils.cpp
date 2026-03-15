@@ -54,4 +54,67 @@ void updateAvailableMoves(std::set<std::pair<int, int>>& availableMoves,
     }
 }
 
+// Count distinct open-3 windows that pass through (x, y) after placing playerMark there.
+// An open-3 is a 5-cell window with exactly 3 friendly marks, 2 empty cells, no opponent
+// marks, and both cells just outside the window unblocked by the opponent.
+// Uses in-place make/unmake pattern.
+int countOpenThreesAtPosition(TicTacToeBoard& board, int x, int y, char playerMark) {
+    board.placeMarkDirect(x, y, playerMark);
+    char opponent = (playerMark == 'X') ? 'O' : 'X';
+    int count = 0;
+
+    int directions[4][2] = {{1, 0}, {0, 1}, {1, 1}, {1, -1}};
+    std::set<std::pair<std::pair<int, int>, std::pair<int, int>>> countedWindows;
+    const auto& occupied = board.getOccupiedPositions();
+
+    for (int d = 0; d < 4; ++d) {
+        int dx = directions[d][0];
+        int dy = directions[d][1];
+
+        for (int offset = 0; offset < 5; ++offset) {
+            int startX = x - offset * dx;
+            int startY = y - offset * dy;
+            int endX = startX + 4 * dx;
+            int endY = startY + 4 * dy;
+
+            auto p1 = std::make_pair(startX, startY);
+            auto p2 = std::make_pair(endX, endY);
+            auto windowKey = (p1 < p2) ? std::make_pair(p1, p2) : std::make_pair(p2, p1);
+
+            if (countedWindows.count(windowKey) > 0) continue;
+            countedWindows.insert(windowKey);
+
+            int friendlyCount = 0, opponentCount = 0, emptyCount = 0;
+            for (int k = 0; k < 5; ++k) {
+                int cellX = startX + k * dx;
+                int cellY = startY + k * dy;
+                if (!board.isPositionOccupied(cellX, cellY)) {
+                    emptyCount++;
+                } else if (occupied.at({cellX, cellY}) == playerMark) {
+                    friendlyCount++;
+                } else {
+                    opponentCount++;
+                }
+            }
+
+            if (opponentCount > 0 || friendlyCount != 3 || emptyCount != 2) continue;
+
+            int beforeX = startX - dx, beforeY = startY - dy;
+            int afterX = endX + dx, afterY = endY + dy;
+
+            bool openBefore = !board.isPositionOccupied(beforeX, beforeY) ||
+                              occupied.at({beforeX, beforeY}) != opponent;
+            bool openAfter = !board.isPositionOccupied(afterX, afterY) ||
+                             occupied.at({afterX, afterY}) != opponent;
+
+            if (openBefore && openAfter) {
+                count++;
+            }
+        }
+    }
+
+    board.removeMarkDirect(x, y);
+    return count;
+}
+
 } // namespace AIUtils
