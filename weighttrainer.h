@@ -3,8 +3,7 @@
 // SPDX-FileCopyrightText: 2024 Ran Rutenberg <ran.rutenberg@gmail.com>
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef WEIGHTTRAINER_H
-#define WEIGHTTRAINER_H
+#pragma once
 
 #include "evaluationweights.h"
 #include "ai_types.h"
@@ -67,5 +66,3 @@ public:
     // Train weights through multiple generations
     EvaluationWeights train(int generations, const EvaluationWeights& startingWeights);
 };
-
-#endif // WEIGHTTRAINER_H

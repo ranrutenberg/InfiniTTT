@@ -2,8 +2,7 @@
 // SPDX-FileCopyrightText: 2024 Ran Rutenberg <ran.rutenberg@gmail.com>
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef GRIDGRAPHICSITEM_H
-#define GRIDGRAPHICSITEM_H
+#pragma once
 
 #include <QGraphicsItem>
 #include <set>
@@ -26,5 +25,3 @@ private:
     int minX_ = -5, maxX_ = 5;
     int minY_ = -5, maxY_ = 5;
 };
-
-#endif // GRIDGRAPHICSITEM_H

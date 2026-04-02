@@ -2,8 +2,7 @@
 // SPDX-FileCopyrightText: 2024 Ran Rutenberg <ran.rutenberg@gmail.com>
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef BOARDVIEW_H
-#define BOARDVIEW_H
+#pragma once
 
 #include <QGraphicsView>
 #include <QGraphicsScene>
@@ -60,5 +59,3 @@ private:
     // Touch gesture state
     qreal pinchStartZoom_ = 1.0;
 };
-
-#endif // BOARDVIEW_H

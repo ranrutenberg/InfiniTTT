@@ -2,8 +2,7 @@
 // SPDX-FileCopyrightText: 2024 Ran Rutenberg <ran.rutenberg@gmail.com>
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef GAMESETUPDIALOG_H
-#define GAMESETUPDIALOG_H
+#pragma once
 
 #include <QDialog>
 #include <QComboBox>
@@ -32,5 +31,3 @@ private:
     QComboBox* player2AITypeCombo_;
     QComboBox* player2LevelCombo_;
 };
-
-#endif // GAMESETUPDIALOG_H

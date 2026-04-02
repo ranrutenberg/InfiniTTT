@@ -2,8 +2,7 @@
 // SPDX-FileCopyrightText: 2024 Ran Rutenberg <ran.rutenberg@gmail.com>
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef CONFIGDIALOG_H
-#define CONFIGDIALOG_H
+#pragma once
 
 #include <QDialog>
 #include <QLineEdit>
@@ -30,5 +29,3 @@ private:
     QLineEdit* hybridPathEdit_;
     QLineEdit* hybridV2PathEdit_;
 };
-
-#endif // CONFIGDIALOG_H

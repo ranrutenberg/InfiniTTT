@@ -3,8 +3,7 @@
 // SPDX-FileCopyrightText: 2024 Ran Rutenberg <ran.rutenberg@gmail.com>
 // SPDX-License-Identifier: GPL-3.0-only
 
-#ifndef EVALUATIONWEIGHTS_H
-#define EVALUATIONWEIGHTS_H
+#pragma once
 
 #include <string>
 #include <fstream>
@@ -108,5 +107,3 @@ struct EvaluationWeights {
                   << "  double-threat: " << double_threat << "\n";
     }
 };
-
-#endif // EVALUATIONWEIGHTS_H
