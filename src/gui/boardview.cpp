@@ -109,7 +109,7 @@ QGraphicsItem* BoardView::createMarkItem(int x, int y, char mark) {
 }
 
 void BoardView::highlightLastMove(int x, int y) {
-    QPointF topLeft(x * CELL_SIZE, y * CELL_SIZE);
+    QPointF topLeft(x * CELL_SIZE, -(y + 1) * CELL_SIZE);
     highlightItem_->setRect(topLeft.x(), topLeft.y(), CELL_SIZE, CELL_SIZE);
     highlightItem_->setVisible(true);
 }
@@ -129,12 +129,12 @@ void BoardView::resetView() {
 }
 
 QPointF BoardView::cellToScene(int x, int y) const {
-    return QPointF(x * CELL_SIZE + CELL_SIZE / 2, y * CELL_SIZE + CELL_SIZE / 2);
+    return QPointF(x * CELL_SIZE + CELL_SIZE / 2, -y * CELL_SIZE - CELL_SIZE / 2);
 }
 
 std::pair<int, int> BoardView::sceneToCell(const QPointF& pos) const {
     int cellX = static_cast<int>(std::floor(pos.x() / CELL_SIZE));
-    int cellY = static_cast<int>(std::floor(pos.y() / CELL_SIZE));
+    int cellY = -1 - static_cast<int>(std::floor(pos.y() / CELL_SIZE));
     return {cellX, cellY};
 }
 

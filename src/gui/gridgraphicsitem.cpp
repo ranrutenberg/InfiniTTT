@@ -31,7 +31,7 @@ void GridGraphicsItem::expandToInclude(int x, int y) {
 
 QRectF GridGraphicsItem::boundingRect() const {
     qreal left = minX_ * cellSize_;
-    qreal top = minY_ * cellSize_;
+    qreal top = -(maxY_ + 1) * cellSize_;
     qreal width = (maxX_ - minX_ + 1) * cellSize_;
     qreal height = (maxY_ - minY_ + 1) * cellSize_;
     return QRectF(left, top, width, height);
@@ -56,7 +56,7 @@ void GridGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsItem*,
 
     // Horizontal lines
     for (int y = minY_; y <= maxY_ + 1; ++y) {
-        qreal yPos = y * cellSize_;
+        qreal yPos = -y * cellSize_;
         painter->drawLine(QPointF(rect.left(), yPos), QPointF(rect.right(), yPos));
     }
 
@@ -91,7 +91,7 @@ void GridGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsItem*,
     // Y-axis labels (left)
     for (int y = minY_; y <= maxY_; ++y) {
         if (y % 5 == 0) {
-            qreal yPos = y * cellSize_ + cellSize_ / 2;
+            qreal yPos = -y * cellSize_ - cellSize_ / 2;
             painter->drawText(QRectF(rect.left() - 25, yPos - 7, 20, 15),
                               Qt::AlignRight | Qt::AlignVCenter, QString::number(y));
         }
