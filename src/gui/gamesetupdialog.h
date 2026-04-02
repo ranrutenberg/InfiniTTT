@@ -30,4 +30,14 @@ private:
     QComboBox* player2TypeCombo_;
     QComboBox* player2AITypeCombo_;
     QComboBox* player2LevelCombo_;
+
+    struct LastSettings {
+        int p1Type   = 0;  // 0=Human, 1=AI
+        int p1AIType = 0;  // 0=Smart Random, 1=Hybrid, 2=Hybrid v2
+        int p1Level  = 2;
+        int p2Type   = 1;  // default: AI
+        int p2AIType = 1;  // default: Hybrid Evaluator
+        int p2Level  = 2;
+    };
+    static LastSettings lastSettings_;
 };
