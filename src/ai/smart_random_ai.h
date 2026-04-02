@@ -14,6 +14,8 @@ class TicTacToeBoard;
 // Level 2: Block opponent winning moves
 // Level 3: Create double threats (moves that leave >= 2 winning follow-ups, e.g. open triplet _xxx_)
 // Level 4: Block opponent double threats (fork prevention)
+// Level 5: Create second-order double threats (move creates >= 2 open-3 sequences simultaneously)
+// Level 6: Block opponent second-order double threats
 class SmartRandomAI : public AIPlayer {
 private:
     std::set<std::pair<int, int>> availableMoves;  // Maintained internally by AI
