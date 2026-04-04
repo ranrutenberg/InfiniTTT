@@ -1,3 +1,11 @@
+infinittt (0.2.0-1) unstable; urgency=medium
+
+  * Move counter in status bar showing current move number
+  * Undo Last Move button (Ctrl+Z) for Human vs Human games
+  * Game Setup Dialog remembers last player configuration within session
+
+ -- Ran Rutenberg <ran.rutenberg@gmail.com>  Fri, 04 Apr 2025 00:00:00 +0000
+
 infinittt (0.1.1-1) unstable; urgency=medium
 
   * Initial release
