@@ -8,6 +8,8 @@
 #include <QTimer>
 #include <QString>
 #include <memory>
+#include <vector>
+#include <tuple>
 #include "tictactoeboard.h"
 #include "ai_types.h"
 #include "aiplayer.h"
@@ -33,9 +35,12 @@ public:
 
     void startNewGame(const GameConfig& config);
     void handleCellClick(int x, int y);
+    void undoMove();
     bool isGameActive() const { return gameActive_; }
+    bool isHumanVsHuman() const { return config_.player1.isHuman && config_.player2.isHuman; }
     char getCurrentPlayer() const { return currentPlayer_; }
     const TicTacToeBoard& getBoard() const { return board_; }
+    const std::vector<std::tuple<int,int,char>>& getMoveHistory() const { return moveHistory_; }
 
     // Weight file configuration
     void setHybridEvaluatorWeightsPath(const QString& path);
@@ -49,6 +54,7 @@ signals:
     void gameOver(char winner);
     void aiThinking(bool thinking);
     void invalidMove(int x, int y, const QString& reason);
+    void moveUndone();
 
 private slots:
     void executeAIMove();
@@ -69,6 +75,7 @@ private:
     std::unique_ptr<EvaluationWeights> weights1_;
     std::unique_ptr<EvaluationWeights> weights2_;
 
+    std::vector<std::tuple<int,int,char>> moveHistory_;
     char currentPlayer_ = 'X';
     bool gameActive_ = false;
     std::pair<int, int> lastMove_ = {INT_MIN, INT_MIN};

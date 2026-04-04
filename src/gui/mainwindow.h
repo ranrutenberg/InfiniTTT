@@ -6,6 +6,8 @@
 
 #include <QMainWindow>
 #include <QLabel>
+#include <QToolBar>
+#include <QAction>
 #include "boardview.h"
 #include "gamecontroller.h"
 
@@ -25,6 +27,8 @@ private slots:
     void onResetView();
     void onConfiguration();
     void onAbout();
+    void onUndoMove();
+    void onMoveUndone();
 
 private:
     void setupUI();
@@ -36,8 +40,12 @@ private:
     BoardView* boardView_;
     GameController* controller_;
     QLabel* turnLabel_;
+    QLabel* moveCountLabel_;
     QLabel* statusLabel_;
+    QToolBar* undoToolBar_;
+    QAction* undoAction_;
 
     char currentPlayer_ = 'X';
     bool gameActive_ = false;
+    int moveCount_ = 0;
 };

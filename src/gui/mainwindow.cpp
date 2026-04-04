@@ -37,10 +37,19 @@ void MainWindow::setupUI() {
 
     // Status bar
     turnLabel_ = new QLabel("Turn: X", this);
+    moveCountLabel_ = new QLabel("Move: 0", this);
     statusLabel_ = new QLabel("Start a new game", this);
 
     statusBar()->addWidget(turnLabel_);
+    statusBar()->addPermanentWidget(moveCountLabel_);
     statusBar()->addPermanentWidget(statusLabel_);
+
+    // Undo toolbar (hidden until a Human vs Human game starts)
+    undoToolBar_ = addToolBar("Actions");
+    undoAction_ = undoToolBar_->addAction("Undo Last Move");
+    undoAction_->setShortcut(QKeySequence::Undo);
+    undoAction_->setEnabled(false);
+    undoToolBar_->setVisible(false);
 }
 
 void MainWindow::setupMenus() {
@@ -91,6 +100,9 @@ void MainWindow::connectSignals() {
 
     connect(controller_, &GameController::aiThinking,
             this, &MainWindow::onAIThinking);
+
+    connect(undoAction_, &QAction::triggered, this, &MainWindow::onUndoMove);
+    connect(controller_, &GameController::moveUndone, this, &MainWindow::onMoveUndone);
 }
 
 void MainWindow::loadSettings() {
@@ -121,14 +133,25 @@ void MainWindow::onNewGame() {
         boardView_->clearBoard();
         controller_->startNewGame(config);
         gameActive_ = true;
+        moveCount_ = 0;
+        moveCountLabel_->setText("Move: 0");
         statusLabel_->setText("Game in progress");
         boardView_->setInteractionEnabled(true);
+
+        bool hvh = controller_->isHumanVsHuman();
+        undoToolBar_->setVisible(hvh);
+        undoAction_->setEnabled(false);
     }
 }
 
 void MainWindow::onMoveExecuted(int x, int y, char mark) {
     boardView_->placeMark(x, y, mark);
     boardView_->centerOnPosition(x, y);
+    moveCount_++;
+    moveCountLabel_->setText(QString("Move: %1").arg(moveCount_));
+    if (controller_->isHumanVsHuman()) {
+        undoAction_->setEnabled(controller_->getMoveHistory().size() > 1);
+    }
 }
 
 void MainWindow::onGameOver(char winner) {
@@ -176,6 +199,31 @@ void MainWindow::onConfiguration() {
         controller_->setHybridEvaluatorV2WeightsPath(dialog.getHybridEvaluatorV2Path());
         saveSettings();
     }
+}
+
+void MainWindow::onUndoMove() {
+    controller_->undoMove();
+}
+
+void MainWindow::onMoveUndone() {
+    boardView_->clearBoard();
+    const auto& history = controller_->getMoveHistory();
+    moveCount_ = 0;
+    for (const auto& [x, y, mark] : history) {
+        boardView_->placeMark(x, y, mark);
+        moveCount_++;
+    }
+    moveCountLabel_->setText(QString("Move: %1").arg(moveCount_));
+
+    if (!history.empty()) {
+        const auto& [lx, ly, lm] = history.back();
+        boardView_->highlightLastMove(lx, ly);
+        boardView_->centerOnPosition(lx, ly);
+    }
+
+    statusLabel_->setText("Game in progress");
+    boardView_->setInteractionEnabled(true);
+    undoAction_->setEnabled(history.size() > 1);
 }
 
 void MainWindow::onAbout() {

@@ -28,6 +28,7 @@ void GameController::startNewGame(const GameConfig& config) {
     gameActive_ = true;
     lastMove_ = {INT_MIN, INT_MIN};
     moveCount_ = 0;
+    moveHistory_.clear();
 
     player1AI_.reset();
     player2AI_.reset();
@@ -55,6 +56,7 @@ void GameController::executeFirstMove() {
 
     // Place first move at (0, 0)
     board_.placeMark(0, 0);
+    moveHistory_.emplace_back(0, 0, currentPlayer_);
     emit moveExecuted(0, 0, currentPlayer_);
     lastMove_ = {0, 0};
     moveCount_++;
@@ -77,6 +79,7 @@ void GameController::handleCellClick(int x, int y) {
     }
 
     board_.placeMark(x, y);
+    moveHistory_.emplace_back(x, y, currentPlayer_);
     emit moveExecuted(x, y, currentPlayer_);
     lastMove_ = {x, y};
     moveCount_++;
@@ -98,12 +101,35 @@ void GameController::executeAIMove() {
     auto [moveX, moveY] = currentAI->findBestMove(board_, currentPlayer_, lastMove_);
 
     board_.placeMark(moveX, moveY);
+    moveHistory_.emplace_back(moveX, moveY, currentPlayer_);
     emit moveExecuted(moveX, moveY, currentPlayer_);
     lastMove_ = {moveX, moveY};
     moveCount_++;
 
     emit aiThinking(false);
     checkGameState(moveX, moveY);
+}
+
+void GameController::undoMove() {
+    if (moveHistory_.size() <= 1) return;  // keep auto-placed first move
+
+    auto [x, y, mark] = moveHistory_.back();
+    moveHistory_.pop_back();
+    board_.removeMarkDirect(x, y);
+    moveCount_--;
+    currentPlayer_ = mark;  // restore to the player who just moved
+    gameActive_ = true;
+
+    // update lastMove_ to the new last move
+    if (!moveHistory_.empty()) {
+        const auto& [lx, ly, lm] = moveHistory_.back();
+        lastMove_ = {lx, ly};
+    } else {
+        lastMove_ = {INT_MIN, INT_MIN};
+    }
+
+    emit moveUndone();
+    emit turnChanged(currentPlayer_);
 }
 
 void GameController::checkGameState(int lastX, int lastY) {
