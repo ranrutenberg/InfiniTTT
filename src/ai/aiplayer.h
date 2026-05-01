@@ -7,6 +7,9 @@
 
 #include <utility>
 #include <climits>
+#include <functional>
+#include <string>
+#include <iostream>
 
 class TicTacToeBoard;
 
@@ -14,10 +17,18 @@ class TicTacToeBoard;
 class AIPlayer {
 protected:
     bool verboseMode = false;
+    std::function<void(const std::string&)> logFn_;
+
+    void log(const std::string& msg) {
+        if (logFn_) logFn_(msg);
+        else if (verboseMode) std::cout << msg;
+    }
 
 public:
     explicit AIPlayer(bool verbose = false) : verboseMode(verbose) {}
     virtual ~AIPlayer() = default;
+
+    void setMessageCallback(std::function<void(const std::string&)> fn) { logFn_ = std::move(fn); }
 
     // Find and return the best move for the current board state
     // lastMove: the last move made by the opponent (x, y coordinates)

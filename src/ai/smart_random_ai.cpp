@@ -106,16 +106,15 @@ std::pair<int, int> SmartRandomAI::findBestMove(const TicTacToeBoard& board, cha
         }
 
         if (!winningMoves.empty()) {
-            // Verbose output
-            if (verboseMode) {
-                std::cout << "\n══════════════════════════════════════════════════════\n";
-                std::cout << "[SmartRandomAI Move Analysis - Player " << playerMark << "]\n";
-                std::cout << "══════════════════════════════════════════════════════\n";
-                std::cout << "Checked " << availableMoves.size() << " available moves\n";
-                std::cout << "Winning moves found: " << winningMoves.size() << "\n";
-                for (const auto& move : winningMoves) {
-                    std::cout << "  - (" << move.first << ", " << move.second << ")\n";
-                }
+            {
+                std::string msg = "\n══════════════════════════════════════════════════════\n";
+                msg += std::string("[SmartRandomAI Move Analysis - Player ") + playerMark + "]\n";
+                msg += "══════════════════════════════════════════════════════\n";
+                msg += "Checked " + std::to_string(availableMoves.size()) + " available moves\n";
+                msg += "Winning moves found: " + std::to_string(winningMoves.size()) + "\n";
+                for (const auto& move : winningMoves)
+                    msg += "  - (" + std::to_string(move.first) + ", " + std::to_string(move.second) + ")\n";
+                log(msg);
             }
 
             // Found winning move(s)! Pick one randomly
@@ -124,10 +123,8 @@ std::pair<int, int> SmartRandomAI::findBestMove(const TicTacToeBoard& board, cha
             std::uniform_int_distribution<> dis(0, winningMoves.size() - 1);
             auto winningMove = winningMoves[dis(gen)];
 
-            if (verboseMode) {
-                std::cout << "\nSelected winning move: (" << winningMove.first << ", " << winningMove.second << ")\n";
-                std::cout << "══════════════════════════════════════════════════════\n\n";
-            }
+            log("\nSelected winning move: (" + std::to_string(winningMove.first) + ", " + std::to_string(winningMove.second) + ")\n"
+                "══════════════════════════════════════════════════════\n\n");
 
             // Update internal available moves with our chosen move
             availableMoves.erase(winningMove);
@@ -156,16 +153,15 @@ std::pair<int, int> SmartRandomAI::findBestMove(const TicTacToeBoard& board, cha
         }
 
         if (!blockingMoves.empty()) {
-            // Verbose output
-            if (verboseMode) {
-                std::cout << "\n══════════════════════════════════════════════════════\n";
-                std::cout << "[SmartRandomAI Move Analysis - Player " << playerMark << "]\n";
-                std::cout << "══════════════════════════════════════════════════════\n";
-                std::cout << "Checked " << availableMoves.size() << " available moves\n";
-                std::cout << "Opponent threatening moves found: " << blockingMoves.size() << "\n";
-                for (const auto& move : blockingMoves) {
-                    std::cout << "  - (" << move.first << ", " << move.second << ")\n";
-                }
+            {
+                std::string msg = "\n══════════════════════════════════════════════════════\n";
+                msg += std::string("[SmartRandomAI Move Analysis - Player ") + playerMark + "]\n";
+                msg += "══════════════════════════════════════════════════════\n";
+                msg += "Checked " + std::to_string(availableMoves.size()) + " available moves\n";
+                msg += "Opponent threatening moves found: " + std::to_string(blockingMoves.size()) + "\n";
+                for (const auto& move : blockingMoves)
+                    msg += "  - (" + std::to_string(move.first) + ", " + std::to_string(move.second) + ")\n";
+                log(msg);
             }
 
             // Found opponent winning move(s) to block! Pick one randomly
@@ -174,10 +170,8 @@ std::pair<int, int> SmartRandomAI::findBestMove(const TicTacToeBoard& board, cha
             std::uniform_int_distribution<> dis(0, blockingMoves.size() - 1);
             auto blockingMove = blockingMoves[dis(gen)];
 
-            if (verboseMode) {
-                std::cout << "\nSelected blocking move: (" << blockingMove.first << ", " << blockingMove.second << ")\n";
-                std::cout << "══════════════════════════════════════════════════════\n\n";
-            }
+            log("\nSelected blocking move: (" + std::to_string(blockingMove.first) + ", " + std::to_string(blockingMove.second) + ")\n"
+                "══════════════════════════════════════════════════════\n\n");
 
             // Update internal available moves with our chosen move
             availableMoves.erase(blockingMove);
@@ -206,15 +200,15 @@ std::pair<int, int> SmartRandomAI::findBestMove(const TicTacToeBoard& board, cha
         }
 
         if (!doubleThreatMoves.empty()) {
-            if (verboseMode) {
-                std::cout << "\n══════════════════════════════════════════════════════\n";
-                std::cout << "[SmartRandomAI Move Analysis - Player " << playerMark << "]\n";
-                std::cout << "══════════════════════════════════════════════════════\n";
-                std::cout << "Checked " << availableMoves.size() << " available moves\n";
-                std::cout << "Double-threat moves found: " << doubleThreatMoves.size() << "\n";
-                for (const auto& move : doubleThreatMoves) {
-                    std::cout << "  - (" << move.first << ", " << move.second << ")\n";
-                }
+            {
+                std::string msg = "\n══════════════════════════════════════════════════════\n";
+                msg += std::string("[SmartRandomAI Move Analysis - Player ") + playerMark + "]\n";
+                msg += "══════════════════════════════════════════════════════\n";
+                msg += "Checked " + std::to_string(availableMoves.size()) + " available moves\n";
+                msg += "Double-threat moves found: " + std::to_string(doubleThreatMoves.size()) + "\n";
+                for (const auto& move : doubleThreatMoves)
+                    msg += "  - (" + std::to_string(move.first) + ", " + std::to_string(move.second) + ")\n";
+                log(msg);
             }
 
             std::random_device rd;
@@ -222,10 +216,8 @@ std::pair<int, int> SmartRandomAI::findBestMove(const TicTacToeBoard& board, cha
             std::uniform_int_distribution<> dis(0, doubleThreatMoves.size() - 1);
             auto chosenMove = doubleThreatMoves[dis(gen)];
 
-            if (verboseMode) {
-                std::cout << "\nSelected double-threat move: (" << chosenMove.first << ", " << chosenMove.second << ")\n";
-                std::cout << "══════════════════════════════════════════════════════\n\n";
-            }
+            log("\nSelected double-threat move: (" + std::to_string(chosenMove.first) + ", " + std::to_string(chosenMove.second) + ")\n"
+                "══════════════════════════════════════════════════════\n\n");
 
             availableMoves.erase(chosenMove);
             for (int i = chosenMove.first - 1; i <= chosenMove.first + 1; ++i) {
@@ -251,15 +243,15 @@ std::pair<int, int> SmartRandomAI::findBestMove(const TicTacToeBoard& board, cha
         }
 
         if (!blockForkMoves.empty()) {
-            if (verboseMode) {
-                std::cout << "\n══════════════════════════════════════════════════════\n";
-                std::cout << "[SmartRandomAI Move Analysis - Player " << playerMark << "]\n";
-                std::cout << "══════════════════════════════════════════════════════\n";
-                std::cout << "Checked " << availableMoves.size() << " available moves\n";
-                std::cout << "Opponent fork-blocking moves found: " << blockForkMoves.size() << "\n";
-                for (const auto& move : blockForkMoves) {
-                    std::cout << "  - (" << move.first << ", " << move.second << ")\n";
-                }
+            {
+                std::string msg = "\n══════════════════════════════════════════════════════\n";
+                msg += std::string("[SmartRandomAI Move Analysis - Player ") + playerMark + "]\n";
+                msg += "══════════════════════════════════════════════════════\n";
+                msg += "Checked " + std::to_string(availableMoves.size()) + " available moves\n";
+                msg += "Opponent fork-blocking moves found: " + std::to_string(blockForkMoves.size()) + "\n";
+                for (const auto& move : blockForkMoves)
+                    msg += "  - (" + std::to_string(move.first) + ", " + std::to_string(move.second) + ")\n";
+                log(msg);
             }
 
             std::random_device rd;
@@ -267,10 +259,8 @@ std::pair<int, int> SmartRandomAI::findBestMove(const TicTacToeBoard& board, cha
             std::uniform_int_distribution<> dis(0, blockForkMoves.size() - 1);
             auto chosenMove = blockForkMoves[dis(gen)];
 
-            if (verboseMode) {
-                std::cout << "\nSelected fork-blocking move: (" << chosenMove.first << ", " << chosenMove.second << ")\n";
-                std::cout << "══════════════════════════════════════════════════════\n\n";
-            }
+            log("\nSelected fork-blocking move: (" + std::to_string(chosenMove.first) + ", " + std::to_string(chosenMove.second) + ")\n"
+                "══════════════════════════════════════════════════════\n\n");
 
             availableMoves.erase(chosenMove);
             for (int i = chosenMove.first - 1; i <= chosenMove.first + 1; ++i) {
@@ -297,15 +287,15 @@ std::pair<int, int> SmartRandomAI::findBestMove(const TicTacToeBoard& board, cha
         }
 
         if (!doubleOpenThreeMoves.empty()) {
-            if (verboseMode) {
-                std::cout << "\n══════════════════════════════════════════════════════\n";
-                std::cout << "[SmartRandomAI Move Analysis - Player " << playerMark << "]\n";
-                std::cout << "══════════════════════════════════════════════════════\n";
-                std::cout << "Checked " << availableMoves.size() << " available moves\n";
-                std::cout << "Second-order double-threat moves found: " << doubleOpenThreeMoves.size() << "\n";
-                for (const auto& move : doubleOpenThreeMoves) {
-                    std::cout << "  - (" << move.first << ", " << move.second << ")\n";
-                }
+            {
+                std::string msg = "\n══════════════════════════════════════════════════════\n";
+                msg += std::string("[SmartRandomAI Move Analysis - Player ") + playerMark + "]\n";
+                msg += "══════════════════════════════════════════════════════\n";
+                msg += "Checked " + std::to_string(availableMoves.size()) + " available moves\n";
+                msg += "Second-order double-threat moves found: " + std::to_string(doubleOpenThreeMoves.size()) + "\n";
+                for (const auto& move : doubleOpenThreeMoves)
+                    msg += "  - (" + std::to_string(move.first) + ", " + std::to_string(move.second) + ")\n";
+                log(msg);
             }
 
             std::random_device rd;
@@ -313,10 +303,8 @@ std::pair<int, int> SmartRandomAI::findBestMove(const TicTacToeBoard& board, cha
             std::uniform_int_distribution<> dis(0, doubleOpenThreeMoves.size() - 1);
             auto chosenMove = doubleOpenThreeMoves[dis(gen)];
 
-            if (verboseMode) {
-                std::cout << "\nSelected second-order double-threat move: (" << chosenMove.first << ", " << chosenMove.second << ")\n";
-                std::cout << "══════════════════════════════════════════════════════\n\n";
-            }
+            log("\nSelected second-order double-threat move: (" + std::to_string(chosenMove.first) + ", " + std::to_string(chosenMove.second) + ")\n"
+                "══════════════════════════════════════════════════════\n\n");
 
             availableMoves.erase(chosenMove);
             for (int i = chosenMove.first - 1; i <= chosenMove.first + 1; ++i) {
@@ -342,15 +330,15 @@ std::pair<int, int> SmartRandomAI::findBestMove(const TicTacToeBoard& board, cha
         }
 
         if (!blockDoubleOpenThreeMoves.empty()) {
-            if (verboseMode) {
-                std::cout << "\n══════════════════════════════════════════════════════\n";
-                std::cout << "[SmartRandomAI Move Analysis - Player " << playerMark << "]\n";
-                std::cout << "══════════════════════════════════════════════════════\n";
-                std::cout << "Checked " << availableMoves.size() << " available moves\n";
-                std::cout << "Opponent second-order double-threat blocking moves found: " << blockDoubleOpenThreeMoves.size() << "\n";
-                for (const auto& move : blockDoubleOpenThreeMoves) {
-                    std::cout << "  - (" << move.first << ", " << move.second << ")\n";
-                }
+            {
+                std::string msg = "\n══════════════════════════════════════════════════════\n";
+                msg += std::string("[SmartRandomAI Move Analysis - Player ") + playerMark + "]\n";
+                msg += "══════════════════════════════════════════════════════\n";
+                msg += "Checked " + std::to_string(availableMoves.size()) + " available moves\n";
+                msg += "Opponent second-order double-threat blocking moves found: " + std::to_string(blockDoubleOpenThreeMoves.size()) + "\n";
+                for (const auto& move : blockDoubleOpenThreeMoves)
+                    msg += "  - (" + std::to_string(move.first) + ", " + std::to_string(move.second) + ")\n";
+                log(msg);
             }
 
             std::random_device rd;
@@ -358,10 +346,8 @@ std::pair<int, int> SmartRandomAI::findBestMove(const TicTacToeBoard& board, cha
             std::uniform_int_distribution<> dis(0, blockDoubleOpenThreeMoves.size() - 1);
             auto chosenMove = blockDoubleOpenThreeMoves[dis(gen)];
 
-            if (verboseMode) {
-                std::cout << "\nSelected second-order double-threat block: (" << chosenMove.first << ", " << chosenMove.second << ")\n";
-                std::cout << "══════════════════════════════════════════════════════\n\n";
-            }
+            log("\nSelected second-order double-threat block: (" + std::to_string(chosenMove.first) + ", " + std::to_string(chosenMove.second) + ")\n"
+                "══════════════════════════════════════════════════════\n\n");
 
             availableMoves.erase(chosenMove);
             for (int i = chosenMove.first - 1; i <= chosenMove.first + 1; ++i) {

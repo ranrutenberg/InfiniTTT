@@ -6,12 +6,38 @@
 #include "smart_random_ai.h"
 #include "hybrid_evaluator_ai.h"
 #include "hybrid_evaluator_ai_v2.h"
+#include <string>
+#include <QFile>
 
 GameController::GameController(QObject* parent)
     : QObject(parent) {
 }
 
 GameController::~GameController() = default;
+
+void GameController::startNewGameQML(bool p1Human, int p1AIType, int p1Level,
+                                     bool p2Human, int p2AIType, int p2Level) {
+    GameConfig config;
+    config.player1.isHuman = p1Human;
+    config.player1.aiType = static_cast<AIType>(p1AIType);
+    config.player1.smartRandomLevel = p1Level;
+    config.player2.isHuman = p2Human;
+    config.player2.aiType = static_cast<AIType>(p2AIType);
+    config.player2.smartRandomLevel = p2Level;
+    startNewGame(config);
+}
+
+QVariantList GameController::getMoveHistoryQML() const {
+    QVariantList result;
+    for (const auto& [x, y, mark] : moveHistory_) {
+        QVariantMap entry;
+        entry["x"] = x;
+        entry["y"] = y;
+        entry["mark"] = static_cast<int>(mark);
+        result.append(entry);
+    }
+    return result;
+}
 
 void GameController::setHybridEvaluatorWeightsPath(const QString& path) {
     hybridWeightsPath_ = path;
@@ -38,11 +64,17 @@ void GameController::startNewGame(const GameConfig& config) {
     if (!config_.player1.isHuman) {
         weights1_ = loadWeightsForAI(config_.player1.aiType);
         player1AI_ = createAIPlayer(config_.player1, weights1_.get());
+        player1AI_->setMessageCallback([this](const std::string& msg) {
+            emit aiMessage('X', QString::fromStdString(msg));
+        });
     }
 
     if (!config_.player2.isHuman) {
         weights2_ = loadWeightsForAI(config_.player2.aiType);
         player2AI_ = createAIPlayer(config_.player2, weights2_.get());
+        player2AI_->setMessageCallback([this](const std::string& msg) {
+            emit aiMessage('O', QString::fromStdString(msg));
+        });
     }
 
     emit turnChanged(currentPlayer_);
@@ -191,8 +223,15 @@ std::unique_ptr<EvaluationWeights> GameController::loadWeightsForAI(AIType type)
         return nullptr;
     }
 
+    // QFile handles both Qt resource paths (:/...) and regular filesystem paths
+    QFile file(filename);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return nullptr;
+    }
+
     auto weights = std::make_unique<EvaluationWeights>();
-    if (weights->loadFromFile(filename.toStdString())) {
+    std::string content = file.readAll().toStdString();
+    if (weights->loadFromString(content)) {
         return weights;
     }
 

@@ -11,6 +11,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <algorithm>
+#include <stdexcept>
 
 struct EvaluationWeights {
     // 4 pieces in a 5-cell window (one move from winning)
@@ -48,6 +49,19 @@ struct EvaluationWeights {
              << double_threat << "\n";
 
         return file.good();
+    }
+
+    // Load weights from an in-memory string (same line-by-line format as the file)
+    bool loadFromString(const std::string& content) {
+        std::istringstream stream(content);
+        std::string line;
+        if (std::getline(stream, line)) four_open = std::stoi(line);
+        if (std::getline(stream, line)) four_blocked = std::stoi(line);
+        if (std::getline(stream, line)) three_open = std::stoi(line);
+        if (std::getline(stream, line)) three_blocked = std::stoi(line);
+        if (std::getline(stream, line)) two_open = std::stoi(line);
+        if (std::getline(stream, line)) double_threat = std::stoi(line);
+        return stream.good() || stream.eof();
     }
 
     // Load weights from file

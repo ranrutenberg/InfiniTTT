@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/weights">
+        <file alias="hybrid_evaluator_weights.txt">../hybrid_evaluator_weights.txt</file>
+        <file alias="hybrid_evaluator_v2_weights.txt">../hybrid_evaluator_v2_weights.txt</file>
+    </qresource>
+</RCC>

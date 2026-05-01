@@ -487,11 +487,9 @@ std::pair<int, int> HybridEvaluatorAIv2::findBestMove(const TicTacToeBoard& boar
         return {0, 0};
     }
 
-    if (verboseMode) {
-        std::cout << "\n[HybridEvaluatorAIv2 - Player " << playerMark << "]\n";
-        std::cout << "Depth: " << searchDepth << ", TopN: " << topN << "\n";
-        std::cout << "Evaluating " << availableMoves.size() << " available moves\n";
-    }
+    log(std::string("\n[HybridEvaluatorAIv2 - Player ") + playerMark + "]\n"
+        "Depth: " + std::to_string(searchDepth) + ", TopN: " + std::to_string(topN) + "\n"
+        "Evaluating " + std::to_string(availableMoves.size()) + " available moves\n");
 
     // Create mutable copy for win/block checks
     TicTacToeBoard boardCopy = board;
@@ -505,18 +503,14 @@ std::pair<int, int> HybridEvaluatorAIv2::findBestMove(const TicTacToeBoard& boar
     }
 
     if (!winningMoves.empty()) {
-        if (verboseMode) {
-            std::cout << "Priority 1: Winning moves - " << winningMoves.size() << " found\n";
-        }
+        log("Priority 1: Winning moves - " + std::to_string(winningMoves.size()) + " found\n");
 
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<> dis(0, winningMoves.size() - 1);
         auto winningMove = winningMoves[dis(gen)];
 
-        if (verboseMode) {
-            std::cout << "Selected winning move: (" << winningMove.first << ", " << winningMove.second << ")\n\n";
-        }
+        log("Selected winning move: (" + std::to_string(winningMove.first) + ", " + std::to_string(winningMove.second) + ")\n\n");
 
         availableMoves.erase(winningMove);
         for (int i = winningMove.first - 1; i <= winningMove.first + 1; ++i) {
@@ -529,9 +523,7 @@ std::pair<int, int> HybridEvaluatorAIv2::findBestMove(const TicTacToeBoard& boar
         return winningMove;
     }
 
-    if (verboseMode) {
-        std::cout << "Priority 1: Winning moves - 0 found\n";
-    }
+    log("Priority 1: Winning moves - 0 found\n");
 
     // PRIORITY 2: Block opponent winning moves
     char opponentMark = (playerMark == 'X') ? 'O' : 'X';
@@ -543,18 +535,14 @@ std::pair<int, int> HybridEvaluatorAIv2::findBestMove(const TicTacToeBoard& boar
     }
 
     if (!blockingMoves.empty()) {
-        if (verboseMode) {
-            std::cout << "Priority 2: Blocking moves - " << blockingMoves.size() << " found\n";
-        }
+        log("Priority 2: Blocking moves - " + std::to_string(blockingMoves.size()) + " found\n");
 
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<> dis(0, blockingMoves.size() - 1);
         auto blockingMove = blockingMoves[dis(gen)];
 
-        if (verboseMode) {
-            std::cout << "Selected blocking move: (" << blockingMove.first << ", " << blockingMove.second << ")\n\n";
-        }
+        log("Selected blocking move: (" + std::to_string(blockingMove.first) + ", " + std::to_string(blockingMove.second) + ")\n\n");
 
         availableMoves.erase(blockingMove);
         for (int i = blockingMove.first - 1; i <= blockingMove.first + 1; ++i) {
@@ -567,9 +555,7 @@ std::pair<int, int> HybridEvaluatorAIv2::findBestMove(const TicTacToeBoard& boar
         return blockingMove;
     }
 
-    if (verboseMode) {
-        std::cout << "Priority 2: Blocking moves - 0 found\n";
-    }
+    log("Priority 2: Blocking moves - 0 found\n");
 
     // PRIORITY 2.5: Create a second-order double threat (double open-3 fork)
     // A move that simultaneously creates >= 2 open-3 sequences. The opponent can block
@@ -584,18 +570,14 @@ std::pair<int, int> HybridEvaluatorAIv2::findBestMove(const TicTacToeBoard& boar
         }
 
         if (!doubleOpenThreeMoves.empty()) {
-            if (verboseMode) {
-                std::cout << "Priority 2.5: Second-order double-threat moves - " << doubleOpenThreeMoves.size() << " found\n";
-            }
+            log("Priority 2.5: Second-order double-threat moves - " + std::to_string(doubleOpenThreeMoves.size()) + " found\n");
 
             std::random_device rd;
             std::mt19937 gen(rd());
             std::uniform_int_distribution<> dis(0, doubleOpenThreeMoves.size() - 1);
             auto chosenMove = doubleOpenThreeMoves[dis(gen)];
 
-            if (verboseMode) {
-                std::cout << "Selected second-order double-threat move: (" << chosenMove.first << ", " << chosenMove.second << ")\n\n";
-            }
+            log("Selected second-order double-threat move: (" + std::to_string(chosenMove.first) + ", " + std::to_string(chosenMove.second) + ")\n\n");
 
             availableMoves.erase(chosenMove);
             for (int i = chosenMove.first - 1; i <= chosenMove.first + 1; ++i) {
@@ -608,9 +590,7 @@ std::pair<int, int> HybridEvaluatorAIv2::findBestMove(const TicTacToeBoard& boar
             return chosenMove;
         }
 
-        if (verboseMode) {
-            std::cout << "Priority 2.5: Second-order double-threat moves - 0 found\n";
-        }
+        log("Priority 2.5: Second-order double-threat moves - 0 found\n");
     }
 
     // PRIORITY 2.7: Block opponent second-order double threat
@@ -624,18 +604,14 @@ std::pair<int, int> HybridEvaluatorAIv2::findBestMove(const TicTacToeBoard& boar
         }
 
         if (!blockDoubleOpenThreeMoves.empty()) {
-            if (verboseMode) {
-                std::cout << "Priority 2.7: Block opponent second-order double-threat - " << blockDoubleOpenThreeMoves.size() << " found\n";
-            }
+            log("Priority 2.7: Block opponent second-order double-threat - " + std::to_string(blockDoubleOpenThreeMoves.size()) + " found\n");
 
             std::random_device rd;
             std::mt19937 gen(rd());
             std::uniform_int_distribution<> dis(0, blockDoubleOpenThreeMoves.size() - 1);
             auto chosenMove = blockDoubleOpenThreeMoves[dis(gen)];
 
-            if (verboseMode) {
-                std::cout << "Selected second-order double-threat block: (" << chosenMove.first << ", " << chosenMove.second << ")\n\n";
-            }
+            log("Selected second-order double-threat block: (" + std::to_string(chosenMove.first) + ", " + std::to_string(chosenMove.second) + ")\n\n");
 
             availableMoves.erase(chosenMove);
             for (int i = chosenMove.first - 1; i <= chosenMove.first + 1; ++i) {
@@ -648,10 +624,8 @@ std::pair<int, int> HybridEvaluatorAIv2::findBestMove(const TicTacToeBoard& boar
             return chosenMove;
         }
 
-        if (verboseMode) {
-            std::cout << "Priority 2.7: Block opponent second-order double-threat - 0 found\n";
-            std::cout << "Priority 3: Minimax evaluation (depth=" << searchDepth << ")\n";
-        }
+        log("Priority 2.7: Block opponent second-order double-threat - 0 found\n"
+            "Priority 3: Minimax evaluation (depth=" + std::to_string(searchDepth) + ")\n");
     }
 
     // PRIORITY 3: Use minimax to evaluate moves
@@ -713,9 +687,7 @@ std::pair<int, int> HybridEvaluatorAIv2::findBestMove(const TicTacToeBoard& boar
 
         results.push_back({ms.move, value});
 
-        if (verboseMode) {
-            std::cout << "  Move (" << x << "," << y << "): minimax value = " << value << "\n";
-        }
+        log("  Move (" + std::to_string(x) + "," + std::to_string(y) + "): minimax value = " + std::to_string(value) + "\n");
     }
 
     // Find best move(s)
@@ -743,10 +715,8 @@ std::pair<int, int> HybridEvaluatorAIv2::findBestMove(const TicTacToeBoard& boar
     std::uniform_int_distribution<> dis(0, bestMoves.size() - 1);
     auto chosenMove = bestMoves[dis(gen)];
 
-    if (verboseMode) {
-        std::cout << "Best value: " << bestValue << " (" << bestMoves.size() << " tied)\n";
-        std::cout << "Selected: (" << chosenMove.first << ", " << chosenMove.second << ")\n\n";
-    }
+    log("Best value: " + std::to_string(bestValue) + " (" + std::to_string(bestMoves.size()) + " tied)\n"
+        "Selected: (" + std::to_string(chosenMove.first) + ", " + std::to_string(chosenMove.second) + ")\n\n");
 
     // Update internal available moves
     availableMoves.erase(chosenMove);

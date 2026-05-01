@@ -1,5 +1,5 @@
-# Build directory
-build/
+# Build directories (covers build/, build-android-arm64/, build-android/, etc.)
+build*/
 
 # VS Code settings (optional - you can track these if you want)
 .vscode/
@@ -9,10 +9,25 @@ build/
 *.kdev4
 .kdevelop
 
-# Compiled binaries
+# Machine-specific CMake preset overrides (paths to local Qt/SDK installs)
+CMakeUserPresets.json
+
+# Keystores — never commit these
+*.jks
+*.keystore
+
+# Compiled binaries and Android outputs
 *.o
 *.out
+*.so
+*.a
+*.apk
+*.aab
+*.aar
+*.idsig
 tictactoe
+InfiniTTT_CLI
+InfiniTTT_GUI
 
 # CMake
 CMakeCache.txt

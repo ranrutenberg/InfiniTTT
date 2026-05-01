@@ -193,10 +193,8 @@ std::pair<int, int> HybridEvaluatorAI::findBestMove(const TicTacToeBoard& board,
         return {0, 0};
     }
 
-    if (verboseMode) {
-        std::cout << "\n[HybridEvaluatorAI - Player " << playerMark << "]\n";
-        std::cout << "Evaluating " << availableMoves.size() << " available moves\n";
-    }
+    log(std::string("\n[HybridEvaluatorAI - Player ") + playerMark + "]\n"
+        "Evaluating " + std::to_string(availableMoves.size()) + " available moves\n");
 
     // PRIORITY LEVEL 1: Check for winning moves
     std::vector<std::pair<int, int>> winningMoves;
@@ -208,11 +206,11 @@ std::pair<int, int> HybridEvaluatorAI::findBestMove(const TicTacToeBoard& board,
     }
 
     if (!winningMoves.empty()) {
-        if (verboseMode) {
-            std::cout << "Priority 1: Winning moves - " << winningMoves.size() << " found\n";
-            for (const auto& move : winningMoves) {
-                std::cout << "  - (" << move.first << ", " << move.second << ")\n";
-            }
+        {
+            std::string msg = "Priority 1: Winning moves - " + std::to_string(winningMoves.size()) + " found\n";
+            for (const auto& move : winningMoves)
+                msg += "  - (" + std::to_string(move.first) + ", " + std::to_string(move.second) + ")\n";
+            log(msg);
         }
 
         // Found winning move(s)! Pick one randomly
@@ -221,9 +219,7 @@ std::pair<int, int> HybridEvaluatorAI::findBestMove(const TicTacToeBoard& board,
         std::uniform_int_distribution<> dis(0, winningMoves.size() - 1);
         auto winningMove = winningMoves[dis(gen)];
 
-        if (verboseMode) {
-            std::cout << "Selected winning move: (" << winningMove.first << ", " << winningMove.second << ")\n\n";
-        }
+        log("Selected winning move: (" + std::to_string(winningMove.first) + ", " + std::to_string(winningMove.second) + ")\n\n");
 
         // Update internal available moves
         availableMoves.erase(winningMove);
@@ -239,9 +235,7 @@ std::pair<int, int> HybridEvaluatorAI::findBestMove(const TicTacToeBoard& board,
         return winningMove;
     }
 
-    if (verboseMode) {
-        std::cout << "Priority 1: Winning moves - 0 found\n";
-    }
+    log("Priority 1: Winning moves - 0 found\n");
 
     // PRIORITY LEVEL 2: Block opponent winning moves
     char opponentMark = (playerMark == 'X') ? 'O' : 'X';
@@ -254,11 +248,11 @@ std::pair<int, int> HybridEvaluatorAI::findBestMove(const TicTacToeBoard& board,
     }
 
     if (!blockingMoves.empty()) {
-        if (verboseMode) {
-            std::cout << "Priority 2: Blocking moves - " << blockingMoves.size() << " found\n";
-            for (const auto& move : blockingMoves) {
-                std::cout << "  Blocking threat at (" << move.first << ", " << move.second << ")\n";
-            }
+        {
+            std::string msg = "Priority 2: Blocking moves - " + std::to_string(blockingMoves.size()) + " found\n";
+            for (const auto& move : blockingMoves)
+                msg += "  Blocking threat at (" + std::to_string(move.first) + ", " + std::to_string(move.second) + ")\n";
+            log(msg);
         }
 
         // Found opponent winning move(s) to block! Pick one randomly
@@ -267,9 +261,7 @@ std::pair<int, int> HybridEvaluatorAI::findBestMove(const TicTacToeBoard& board,
         std::uniform_int_distribution<> dis(0, blockingMoves.size() - 1);
         auto blockingMove = blockingMoves[dis(gen)];
 
-        if (verboseMode) {
-            std::cout << "Selected blocking move: (" << blockingMove.first << ", " << blockingMove.second << ")\n\n";
-        }
+        log("Selected blocking move: (" + std::to_string(blockingMove.first) + ", " + std::to_string(blockingMove.second) + ")\n\n");
 
         // Update internal available moves
         availableMoves.erase(blockingMove);
@@ -285,9 +277,7 @@ std::pair<int, int> HybridEvaluatorAI::findBestMove(const TicTacToeBoard& board,
         return blockingMove;
     }
 
-    if (verboseMode) {
-        std::cout << "Priority 2: Blocking moves - 0 found\n";
-    }
+    log("Priority 2: Blocking moves - 0 found\n");
 
     // PRIORITY LEVEL 2.5: Create a second-order double threat (double open-3 fork)
     // A move that simultaneously creates >= 2 open-3 sequences. The opponent can block
@@ -303,11 +293,11 @@ std::pair<int, int> HybridEvaluatorAI::findBestMove(const TicTacToeBoard& board,
         }
 
         if (!doubleOpenThreeMoves.empty()) {
-            if (verboseMode) {
-                std::cout << "Priority 2.5: Second-order double-threat moves - " << doubleOpenThreeMoves.size() << " found\n";
-                for (const auto& move : doubleOpenThreeMoves) {
-                    std::cout << "  - (" << move.first << ", " << move.second << ")\n";
-                }
+            {
+                std::string msg = "Priority 2.5: Second-order double-threat moves - " + std::to_string(doubleOpenThreeMoves.size()) + " found\n";
+                for (const auto& move : doubleOpenThreeMoves)
+                    msg += "  - (" + std::to_string(move.first) + ", " + std::to_string(move.second) + ")\n";
+                log(msg);
             }
 
             std::random_device rd;
@@ -315,9 +305,7 @@ std::pair<int, int> HybridEvaluatorAI::findBestMove(const TicTacToeBoard& board,
             std::uniform_int_distribution<> dis(0, doubleOpenThreeMoves.size() - 1);
             auto chosenMove = doubleOpenThreeMoves[dis(gen)];
 
-            if (verboseMode) {
-                std::cout << "Selected second-order double-threat move: (" << chosenMove.first << ", " << chosenMove.second << ")\n\n";
-            }
+            log("Selected second-order double-threat move: (" + std::to_string(chosenMove.first) + ", " + std::to_string(chosenMove.second) + ")\n\n");
 
             availableMoves.erase(chosenMove);
             for (int i = chosenMove.first - 1; i <= chosenMove.first + 1; ++i) {
@@ -330,9 +318,7 @@ std::pair<int, int> HybridEvaluatorAI::findBestMove(const TicTacToeBoard& board,
             return chosenMove;
         }
 
-        if (verboseMode) {
-            std::cout << "Priority 2.5: Second-order double-threat moves - 0 found\n";
-        }
+        log("Priority 2.5: Second-order double-threat moves - 0 found\n");
     }
 
     // PRIORITY LEVEL 2.7: Block opponent second-order double threat
@@ -347,11 +333,11 @@ std::pair<int, int> HybridEvaluatorAI::findBestMove(const TicTacToeBoard& board,
         }
 
         if (!blockDoubleOpenThreeMoves.empty()) {
-            if (verboseMode) {
-                std::cout << "Priority 2.7: Block opponent second-order double-threat - " << blockDoubleOpenThreeMoves.size() << " found\n";
-                for (const auto& move : blockDoubleOpenThreeMoves) {
-                    std::cout << "  Blocking at (" << move.first << ", " << move.second << ")\n";
-                }
+            {
+                std::string msg = "Priority 2.7: Block opponent second-order double-threat - " + std::to_string(blockDoubleOpenThreeMoves.size()) + " found\n";
+                for (const auto& move : blockDoubleOpenThreeMoves)
+                    msg += "  Blocking at (" + std::to_string(move.first) + ", " + std::to_string(move.second) + ")\n";
+                log(msg);
             }
 
             std::random_device rd;
@@ -359,9 +345,7 @@ std::pair<int, int> HybridEvaluatorAI::findBestMove(const TicTacToeBoard& board,
             std::uniform_int_distribution<> dis(0, blockDoubleOpenThreeMoves.size() - 1);
             auto chosenMove = blockDoubleOpenThreeMoves[dis(gen)];
 
-            if (verboseMode) {
-                std::cout << "Selected second-order double-threat block: (" << chosenMove.first << ", " << chosenMove.second << ")\n\n";
-            }
+            log("Selected second-order double-threat block: (" + std::to_string(chosenMove.first) + ", " + std::to_string(chosenMove.second) + ")\n\n");
 
             availableMoves.erase(chosenMove);
             for (int i = chosenMove.first - 1; i <= chosenMove.first + 1; ++i) {
@@ -374,10 +358,7 @@ std::pair<int, int> HybridEvaluatorAI::findBestMove(const TicTacToeBoard& board,
             return chosenMove;
         }
 
-        if (verboseMode) {
-            std::cout << "Priority 2.7: Block opponent second-order double-threat - 0 found\n";
-            std::cout << "Priority 3: Position evaluation\n";
-        }
+        log("Priority 2.7: Block opponent second-order double-threat - 0 found\nPriority 3: Position evaluation\n");
     }
 
     // PRIORITY LEVEL 3: Evaluate all moves using position scoring
@@ -414,10 +395,10 @@ std::pair<int, int> HybridEvaluatorAI::findBestMove(const TicTacToeBoard& board,
         }
     }
 
-    if (verboseMode && !bestMoves.empty()) {
-        std::cout << "  Best score: " << bestScore << " (" << bestMoves.size() << " move(s) tied)\n";
-        std::cout << "  Top move: (" << bestMoves[0].move.first << ", " << bestMoves[0].move.second << ")";
-        std::cout << " (Our: " << bestMoves[0].ourSeq << ", Opp: " << bestMoves[0].oppSeq << ")\n";
+    if (!bestMoves.empty()) {
+        log("  Best score: " + std::to_string(bestScore) + " (" + std::to_string(bestMoves.size()) + " move(s) tied)\n"
+            "  Top move: (" + std::to_string(bestMoves[0].move.first) + ", " + std::to_string(bestMoves[0].move.second) + ")"
+            " (Our: " + std::to_string(bestMoves[0].ourSeq) + ", Opp: " + std::to_string(bestMoves[0].oppSeq) + ")\n");
     }
 
     // Random tie-breaking
@@ -426,9 +407,7 @@ std::pair<int, int> HybridEvaluatorAI::findBestMove(const TicTacToeBoard& board,
     std::uniform_int_distribution<> dis(0, bestMoves.size() - 1);
     auto chosenMove = bestMoves[dis(gen)].move;
 
-    if (verboseMode) {
-        std::cout << "Selected: (" << chosenMove.first << ", " << chosenMove.second << ")\n\n";
-    }
+    log("Selected: (" + std::to_string(chosenMove.first) + ", " + std::to_string(chosenMove.second) + ")\n\n");
 
     // Update internal available moves
     availableMoves.erase(chosenMove);

@@ -7,6 +7,7 @@
 #include <QObject>
 #include <QTimer>
 #include <QString>
+#include <QVariantList>
 #include <memory>
 #include <vector>
 #include <tuple>
@@ -34,13 +35,18 @@ public:
     ~GameController() override;
 
     void startNewGame(const GameConfig& config);
-    void handleCellClick(int x, int y);
-    void undoMove();
+    Q_INVOKABLE void handleCellClick(int x, int y);
+    Q_INVOKABLE void undoMove();
     bool isGameActive() const { return gameActive_; }
     bool isHumanVsHuman() const { return config_.player1.isHuman && config_.player2.isHuman; }
     char getCurrentPlayer() const { return currentPlayer_; }
     const TicTacToeBoard& getBoard() const { return board_; }
     const std::vector<std::tuple<int,int,char>>& getMoveHistory() const { return moveHistory_; }
+
+    // QML-friendly interface
+    Q_INVOKABLE void startNewGameQML(bool p1Human, int p1AIType, int p1Level,
+                                     bool p2Human, int p2AIType, int p2Level);
+    Q_INVOKABLE QVariantList getMoveHistoryQML() const;
 
     // Weight file configuration
     void setHybridEvaluatorWeightsPath(const QString& path);
@@ -55,6 +61,7 @@ signals:
     void aiThinking(bool thinking);
     void invalidMove(int x, int y, const QString& reason);
     void moveUndone();
+    void aiMessage(char playerMark, const QString& message);
 
 private slots:
     void executeAIMove();
@@ -83,7 +90,7 @@ private:
     static constexpr int WIN_LENGTH = 5;
     static constexpr int MAX_MOVES = 1000;
 
-    // Configurable weight file paths
-    QString hybridWeightsPath_ = "hybrid_evaluator_weights.txt";
-    QString hybridV2WeightsPath_ = "hybrid_evaluator_v2_weights.txt";
+    // Weight files are always loaded from bundled Qt resources
+    QString hybridWeightsPath_   = ":/weights/hybrid_evaluator_weights.txt";
+    QString hybridV2WeightsPath_ = ":/weights/hybrid_evaluator_v2_weights.txt";
 };
