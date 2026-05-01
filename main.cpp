@@ -670,32 +670,39 @@ int main(int argc, char* argv[]) {
 
     // Check for help
     if (argc > 1 && (std::string(argv[1]) == "--help" || std::string(argv[1]) == "-h")) {
-        std::cout << "Infinite Tic-Tac-Toe - Usage:\n\n";
-        std::cout << "Interactive mode (default):\n";
-        std::cout << "  ./InfiniTTT\n\n";
-        std::cout << "Training mode:\n";
-        std::cout << "  ./InfiniTTT --train [generations] [population] [games_per_matchup]\n";
-        std::cout << "  Trains the Hybrid Evaluator AI using genetic algorithms\n";
-        std::cout << "  Arguments:\n";
-        std::cout << "    generations        - Number of evolution cycles (default: 10)\n";
-        std::cout << "    population         - Number of weight candidates (default: 20)\n";
-        std::cout << "    games_per_matchup  - Games each pair plays (default: 6)\n";
-        std::cout << "  Example:\n";
-        std::cout << "    ./InfiniTTT --train 10 20 6\n";
-        std::cout << "  Note: More games per matchup = more stable results but slower\n\n";
-        std::cout << "Using trained weights:\n";
-        std::cout << "  ./InfiniTTT --use-trained-weights\n";
-        std::cout << "  ./InfiniTTT --benchmark --use-trained-weights --all 50\n";
-        std::cout << "  Note: Automatically loads trained weights for supported AIs\n\n";
-        std::cout << "Benchmark mode:\n";
-        std::cout << "  ./InfiniTTT --benchmark [num_games]\n";
-        std::cout << "  ./InfiniTTT --benchmark --all [num_games]\n\n";
-        std::cout << "Verbose mode (show AI move scores):\n";
-        std::cout << "  ./InfiniTTT --verbose\n";
-        std::cout << "  ./InfiniTTT --benchmark --verbose 50\n\n";
-        std::cout << "Debug mode (verify v2 AI incremental evaluation):\n";
-        std::cout << "  ./InfiniTTT --debug\n";
-        std::cout << "  Logs any mismatches between incremental and full evaluation\n\n";
+        std::cout <<
+            "InfiniTTT_CLI — Infinite Tic-Tac-Toe command-line interface\n"
+            "Win by placing 5 marks in a row on an infinite board.\n"
+            "\n"
+            "USAGE\n"
+            "  InfiniTTT_CLI [MODE] [OPTIONS]\n"
+            "\n"
+            "MODES\n"
+            "  (none)                   Interactive game — choose player types at startup\n"
+            "  --train [G] [P] [N]      Train Hybrid Evaluator weights (genetic algorithm)\n"
+            "                             G  generations        (default: 10)\n"
+            "                             P  population size    (default: 20)\n"
+            "                             N  games per matchup  (default: 6)\n"
+            "  --benchmark [N]          Interactive benchmark — pick two AIs, run N games\n"
+            "  --benchmark --all [N]    Full benchmark — every AI combination, N games each\n"
+            "\n"
+            "OPTIONS\n"
+            "  --use-trained-weights    Load weights from hybrid_evaluator_weights.txt\n"
+            "                           and hybrid_evaluator_v2_weights.txt\n"
+            "  --verbose                Print AI move evaluations during play\n"
+            "  --debug                  Verify v2 incremental eval matches full eval (slow)\n"
+            "  -h, --help               Show this help\n"
+            "\n"
+            "AI TYPES\n"
+            "  1. Smart Random          Random play with configurable win/block/fork levels\n"
+            "  2. Hybrid Evaluator      Position scoring with tactical priority rules\n"
+            "  3. Hybrid Evaluator v2   Hybrid Evaluator + minimax lookahead (depth 2)\n"
+            "\n"
+            "EXAMPLES\n"
+            "  InfiniTTT_CLI\n"
+            "  InfiniTTT_CLI --benchmark --all 100 --use-trained-weights\n"
+            "  InfiniTTT_CLI --train 20 30 10\n"
+            "  InfiniTTT_CLI --verbose --use-trained-weights\n";
         return 0;
     }
 

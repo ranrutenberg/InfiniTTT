@@ -72,6 +72,16 @@ void BoardItem::centerOn(int x, int y) {
     update();
 }
 
+bool BoardItem::isCellVisible(int x, int y) const {
+    qreal cs = CELL_SIZE * zoom_;
+    qreal cx = width()  / 2.0 + panX_ + (x + 0.5) * cs;
+    qreal cy = height() / 2.0 + panY_ - (y + 0.5) * cs;
+    // Require the cell centre to be at least one cell-width from the edge
+    qreal margin = cs;
+    return cx >= margin && cx <= width()  - margin
+        && cy >= margin && cy <= height() - margin;
+}
+
 void BoardItem::resetView() {
     zoom_ = 1.0;
     panX_ = 0.0;

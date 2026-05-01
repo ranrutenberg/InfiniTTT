@@ -26,6 +26,7 @@ public:
     Q_INVOKABLE void clearBoard();
     Q_INVOKABLE void highlightCell(int x, int y);
     Q_INVOKABLE void centerOn(int x, int y);
+    Q_INVOKABLE bool isCellVisible(int x, int y) const;
     Q_INVOKABLE void resetView();
     Q_INVOKABLE void rebuildMarks(const QVariantList& history);
 

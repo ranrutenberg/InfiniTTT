@@ -557,6 +557,32 @@ std::pair<int, int> HybridEvaluatorAIv2::findBestMove(const TicTacToeBoard& boar
 
     log("Priority 2: Blocking moves - 0 found\n");
 
+    // PRIORITY 2.3: Block opponent from creating an open-4 (unblockable double threat)
+    // An open-4 (_XXXX_) has two winning endpoints — Priority 2 can only block one,
+    // so we must prevent it from being created in the first place.
+    {
+        std::vector<std::pair<int, int>> openFourBlockMoves;
+        for (const auto& move : availableMoves) {
+            if (AIUtils::createsOpenFour(boardCopy, move.first, move.second, opponentMark)) {
+                openFourBlockMoves.push_back(move);
+            }
+        }
+        if (!openFourBlockMoves.empty()) {
+            log("Priority 2.3: Block open-4 - " + std::to_string(openFourBlockMoves.size()) + " found\n");
+            std::set<std::pair<int,int>> blockSet(openFourBlockMoves.begin(), openFourBlockMoves.end());
+            auto ranked = getTopNMoves(boardCopy, blockSet, playerMark, 1);
+            auto chosenMove = ranked.empty() ? openFourBlockMoves[0] : ranked[0].move;
+            log("Selected open-4 block: (" + std::to_string(chosenMove.first) + "," + std::to_string(chosenMove.second) + ")\n\n");
+            availableMoves.erase(chosenMove);
+            for (int i = chosenMove.first - 1; i <= chosenMove.first + 1; ++i)
+                for (int j = chosenMove.second - 1; j <= chosenMove.second + 1; ++j)
+                    if (i != chosenMove.first || j != chosenMove.second)
+                        availableMoves.insert({i, j});
+            return chosenMove;
+        }
+        log("Priority 2.3: Block open-4 - 0 found\n");
+    }
+
     // PRIORITY 2.5: Create a second-order double threat (double open-3 fork)
     // A move that simultaneously creates >= 2 open-3 sequences. The opponent can block
     // at most one, so the other will become a first-order double threat next turn.

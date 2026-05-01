@@ -21,6 +21,12 @@ namespace AIUtils {
                              const TicTacToeBoard& board,
                              int moveX, int moveY);
 
+    // Returns true if placing playerMark at (x,y) creates an open-4:
+    // a 5-cell window with exactly 4 friendly marks, 1 empty cell, no opponent marks,
+    // and both cells immediately outside the window unblocked by the opponent.
+    // An open-4 is an unblockable double threat — opponent can win from either end.
+    bool createsOpenFour(TicTacToeBoard& board, int x, int y, char playerMark);
+
     // Count distinct open-3 windows that pass through (x, y) after placing playerMark there.
     // An open-3 is a 5-cell window with exactly 3 friendly marks, 2 empty cells, no opponent
     // marks, and both cells just outside the window unblocked by the opponent.

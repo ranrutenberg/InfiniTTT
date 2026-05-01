@@ -54,6 +54,51 @@ void updateAvailableMoves(std::set<std::pair<int, int>>& availableMoves,
     }
 }
 
+bool createsOpenFour(TicTacToeBoard& board, int x, int y, char playerMark) {
+    board.placeMarkDirect(x, y, playerMark);
+    char opponent = (playerMark == 'X') ? 'O' : 'X';
+
+    int directions[4][2] = {{1, 0}, {0, 1}, {1, 1}, {1, -1}};
+    const auto& occupied = board.getOccupiedPositions();
+    std::set<std::pair<std::pair<int,int>,std::pair<int,int>>> counted;
+
+    for (int d = 0; d < 4; ++d) {
+        int dx = directions[d][0], dy = directions[d][1];
+        for (int offset = 0; offset < 5; ++offset) {
+            int startX = x - offset * dx, startY = y - offset * dy;
+            int endX = startX + 4 * dx, endY = startY + 4 * dy;
+
+            auto p1 = std::make_pair(startX, startY);
+            auto p2 = std::make_pair(endX, endY);
+            auto key = (p1 < p2) ? std::make_pair(p1, p2) : std::make_pair(p2, p1);
+            if (!counted.insert(key).second) continue;
+
+            int friendly = 0, opp = 0, empty = 0;
+            for (int k = 0; k < 5; ++k) {
+                int cx = startX + k * dx, cy = startY + k * dy;
+                if (!board.isPositionOccupied(cx, cy)) { ++empty; }
+                else if (occupied.at({cx, cy}) == playerMark) { ++friendly; }
+                else { ++opp; }
+            }
+
+            if (friendly != 4 || empty != 1 || opp != 0) continue;
+
+            bool openBefore = !board.isPositionOccupied(startX - dx, startY - dy) ||
+                              occupied.at({startX - dx, startY - dy}) != opponent;
+            bool openAfter  = !board.isPositionOccupied(endX + dx, endY + dy) ||
+                              occupied.at({endX + dx, endY + dy}) != opponent;
+
+            if (openBefore && openAfter) {
+                board.removeMarkDirect(x, y);
+                return true;
+            }
+        }
+    }
+
+    board.removeMarkDirect(x, y);
+    return false;
+}
+
 // Count distinct open-3 windows that pass through (x, y) after placing playerMark there.
 // An open-3 is a 5-cell window with exactly 3 friendly marks, 2 empty cells, no opponent
 // marks, and both cells just outside the window unblocked by the opponent.

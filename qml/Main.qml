@@ -21,6 +21,12 @@ ApplicationWindow {
     property bool   humanVsHuman:  false
     property bool   logPanelVisible: false
 
+    // Previous move coords — used by "jump to my move" button after opponent auto-centers
+    property int prevMoveX: 0
+    property int prevMoveY: 0
+    property int lastMoveX: 0
+    property int lastMoveY: 0
+
     // ── AI log model ─────────────────────────────────────────────────────────
     ListModel { id: aiLogModel }
 
@@ -136,8 +142,21 @@ ApplicationWindow {
             }
         }
 
+        // Jump to previous move (only visible after the 2nd move, so there's a "before" to go back to)
+        RoundButton {
+            anchors { right: logToggleBtn.left; verticalCenter: parent.verticalCenter; rightMargin: 2 }
+            width: 36; height: 36
+            text: "📍"
+            font.pixelSize: 16
+            flat: true
+            visible: root.moveCount >= 2
+            Material.foreground: "white"
+            onClicked: board.centerOn(root.prevMoveX, root.prevMoveY)
+        }
+
         // Log panel toggle
         RoundButton {
+            id: logToggleBtn
             anchors { right: parent.right; verticalCenter: parent.verticalCenter; rightMargin: 8 }
             width: 36; height: 36
             text: "💬"
@@ -194,6 +213,10 @@ ApplicationWindow {
             aiLogModel.clear()
             board.clearBoard()
             root.moveCount    = 0
+            root.lastMoveX    = 0
+            root.lastMoveY    = 0
+            root.prevMoveX    = 0
+            root.prevMoveY    = 0
             root.gameActive   = true
             root.aiThinking   = false
             root.humanVsHuman = p1Human && p2Human
@@ -233,7 +256,11 @@ ApplicationWindow {
 
         function onMoveExecuted(x, y, mark) {
             board.placeMark(x, y, mark)
-            board.centerOn(x, y)
+            root.prevMoveX = root.lastMoveX
+            root.prevMoveY = root.lastMoveY
+            root.lastMoveX = x
+            root.lastMoveY = y
+            if (!board.isCellVisible(x, y)) board.centerOn(x, y)
             root.moveCount++
         }
 
@@ -245,7 +272,7 @@ ApplicationWindow {
             root.gameActive = false
             gameOverDialog.winner = winner === 68 ? "" : String.fromCharCode(winner)
             gameOverDialog.isDraw = (winner === 68) // 'D'
-            gameOverDialog.open()
+            gameOverTimer.start()
         }
 
         function onAiThinking(thinking) {
@@ -261,6 +288,14 @@ ApplicationWindow {
             var letter = String.fromCharCode(playerMark)
             aiLogModel.append({ playerText: "Player " + letter + ":", body: message })
         }
+    }
+
+    // Delay game-over dialog so the winning position is visible before it covers the board
+    Timer {
+        id: gameOverTimer
+        interval: 1500
+        repeat: false
+        onTriggered: gameOverDialog.open()
     }
 
     // ── Auto-open setup on launch ─────────────────────────────────────────────
