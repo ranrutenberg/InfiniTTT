@@ -7,6 +7,9 @@
 #include "src/ai/hybrid_evaluator_ai.h"
 #include <iostream>
 #include <algorithm>
+#include <atomic>
+#include <mutex>
+#include <chrono>
 
 // Create AI instance for training
 std::unique_ptr<AIPlayer> WeightTrainer::createTrainingAI(const EvaluationWeights& weights) {
@@ -65,39 +68,70 @@ int WeightTrainer::playSilentGame(const EvaluationWeights& weights1,
 
 // Run a round-robin tournament where each candidate plays against every other
 void WeightTrainer::runTournament(std::vector<WeightCandidate>& population) {
-    // Reset statistics
     for (auto& candidate : population) {
         candidate.wins = 0;
         candidate.losses = 0;
         candidate.draws = 0;
     }
 
-    // Each candidate plays against every other candidate
-    for (size_t i = 0; i < population.size(); ++i) {
-        for (size_t j = i + 1; j < population.size(); ++j) {
-            // Play multiple games, alternating who goes first
-            for (int game = 0; game < gamesPerMatchup; ++game) {
-                bool player1First = (game % 2 == 0);
-                int result = playSilentGame(population[i].weights,
-                                           population[j].weights,
-                                           maxMoves, player1First);
+    // Build the flat list of all (i,j) matchups up front
+    struct Matchup { size_t i, j; };
+    std::vector<Matchup> matchups;
+    matchups.reserve(population.size() * (population.size() - 1) / 2);
+    for (size_t i = 0; i < population.size(); ++i)
+        for (size_t j = i + 1; j < population.size(); ++j)
+            matchups.push_back({i, j});
 
-                if (result == 1) {
-                    population[i].wins++;
-                    population[j].losses++;
-                } else if (result == -1) {
-                    population[i].losses++;
-                    population[j].wins++;
-                } else {
-                    population[i].draws++;
-                    population[j].draws++;
-                }
+    // Per-matchup result storage — no locks needed during game play
+    struct MatchupResult { int iWins = 0, jWins = 0, draws = 0; };
+    std::vector<MatchupResult> results(matchups.size());
+
+    size_t totalMatchups = matchups.size();
+    size_t dotInterval = std::max(size_t(1), totalMatchups / population.size());
+
+    std::atomic<size_t> nextIdx{0};
+    std::atomic<size_t> completedCount{0};
+    std::mutex printMutex;
+
+    auto worker = [&]() {
+        size_t idx;
+        while ((idx = nextIdx.fetch_add(1, std::memory_order_relaxed)) < totalMatchups) {
+            const Matchup& m = matchups[idx];
+            MatchupResult& r = results[idx];
+            for (int game = 0; game < gamesPerMatchup; ++game) {
+                int result = playSilentGame(population[m.i].weights,
+                                           population[m.j].weights,
+                                           maxMoves, game % 2 == 0);
+                if (result == 1)       ++r.iWins;
+                else if (result == -1) ++r.jWins;
+                else                   ++r.draws;
+            }
+            size_t done = completedCount.fetch_add(1, std::memory_order_relaxed) + 1;
+            if (done % dotInterval == 0) {
+                std::lock_guard<std::mutex> lock(printMutex);
+                std::cout << ".";
+                std::cout.flush();
             }
         }
+    };
 
-        // Progress indicator
-        std::cout << ".";
-        std::cout.flush();
+    std::vector<std::thread> threads;
+    threads.reserve(numThreads);
+    for (int t = 0; t < numThreads; ++t)
+        threads.emplace_back(worker);
+    for (auto& t : threads)
+        t.join();
+
+    // Merge results into population (single-threaded — no contention)
+    for (size_t idx = 0; idx < matchups.size(); ++idx) {
+        size_t i = matchups[idx].i, j = matchups[idx].j;
+        const MatchupResult& r = results[idx];
+        population[i].wins   += r.iWins;
+        population[i].losses += r.jWins;
+        population[i].draws  += r.draws;
+        population[j].wins   += r.jWins;
+        population[j].losses += r.iWins;
+        population[j].draws  += r.draws;
     }
     std::cout << "\n";
 }
@@ -144,7 +178,8 @@ std::vector<WeightCandidate> WeightTrainer::evolvePopulation(
 // Train through multiple generations
 EvaluationWeights WeightTrainer::train(int generations, const EvaluationWeights& startingWeights) {
     std::cout << "Initializing weight training with " << populationSize
-              << " candidates over " << generations << " generations...\n\n";
+              << " candidates over " << generations << " generations"
+              << " (" << numThreads << " threads)...\n\n";
 
     // Initialize population around starting weights
     std::vector<WeightCandidate> population;

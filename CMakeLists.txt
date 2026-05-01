@@ -26,11 +26,12 @@ target_include_directories(infinittt_core PUBLIC
 
 # CLI executable (desktop only)
 if(NOT ANDROID)
+    find_package(Threads REQUIRED)
     add_executable(InfiniTTT_CLI
         main.cpp
         weighttrainer.cpp
     )
-    target_link_libraries(InfiniTTT_CLI PRIVATE infinittt_core)
+    target_link_libraries(InfiniTTT_CLI PRIVATE infinittt_core Threads::Threads)
 endif()
 
 # QML GUI (Android and Desktop)

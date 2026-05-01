@@ -15,6 +15,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <memory>
+#include <thread>
 
 struct WeightCandidate {
     EvaluationWeights weights;
@@ -42,6 +43,7 @@ private:
     int gamesPerMatchup;
     int maxMoves;
     double mutationRate;
+    int numThreads;
 
     // Play a single game between two AIs (returns 1 if player1 wins, -1 if player2 wins, 0 for draw)
     int playSilentGame(const EvaluationWeights& weights1, const EvaluationWeights& weights2,
@@ -53,7 +55,8 @@ private:
 public:
     WeightTrainer(AIType aiType = AIType::HYBRID_EVALUATOR, int popSize = 20, int gamesPerMatch = 10, int maxMov = 200, double mutRate = 0.15)
         : trainingAIType(aiType), populationSize(popSize), gamesPerMatchup(gamesPerMatch),
-          maxMoves(maxMov), mutationRate(mutRate) {
+          maxMoves(maxMov), mutationRate(mutRate),
+          numThreads(std::max(1u, std::thread::hardware_concurrency())) {
         srand(static_cast<unsigned int>(time(nullptr)));
     }
 
