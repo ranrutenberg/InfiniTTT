@@ -1,9 +1,6 @@
 # Build directories (covers build/, build-android-arm64/, build-android/, etc.)
 build*/
 
-# VS Code settings (optional - you can track these if you want)
-.vscode/
-
 # KDevelop files
 .kdev4/
 *.kdev4

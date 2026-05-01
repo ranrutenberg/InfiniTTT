@@ -1,0 +1,118 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		// ── Development builds ────────────────────────────────────────────────
+		{
+			"label": "CMake: configure Desktop",
+			"type": "shell",
+			"command": "/usr/bin/cmake",
+			"args": ["--preset", "desktop-debug"],
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
+			"label": "CMake: build Desktop QML",
+			"type": "shell",
+			"command": "/usr/bin/cmake",
+			"args": ["--build", "--preset", "desktop-debug"],
+			"dependsOn": "CMake: configure Desktop",
+			"group": { "kind": "build", "isDefault": true },
+			"problemMatcher": ["$gcc"]
+		},
+		{
+			"label": "CMake: build CLI",
+			"type": "shell",
+			"command": "/usr/bin/cmake",
+			"args": ["--build", "${workspaceFolder}/build", "--target", "InfiniTTT_CLI"],
+			"group": "build",
+			"problemMatcher": ["$gcc"]
+		},
+
+		// ── Clean rebuilds ────────────────────────────────────────────────────
+		{
+			"label": "Clean: Desktop",
+			"type": "shell",
+			"command": "/bin/sh",
+			"args": ["-c", "rm -rf '${workspaceFolder}/build' && cmake --preset desktop-debug && cmake --build --preset desktop-debug"],
+			"group": "build",
+			"problemMatcher": ["$gcc"],
+			"detail": "Wipes the desktop build directory and rebuilds from scratch"
+		},
+		{
+			"label": "Clean: Android arm64",
+			"type": "shell",
+			"command": "/bin/sh",
+			"args": ["-c", "rm -rf '${workspaceFolder}/build-android-arm64' && cmake --preset android-arm64-local && cmake --build --preset android-arm64-local"],
+			"group": "build",
+			"problemMatcher": ["$gcc"],
+			"detail": "Wipes the arm64 build directory and rebuilds from scratch"
+		},
+		{
+			"label": "Clean: Android x86_64",
+			"type": "shell",
+			"command": "/bin/sh",
+			"args": ["-c", "rm -rf '${workspaceFolder}/build-android-x86_64' && cmake --preset android-x86_64-local && cmake --build --preset android-x86_64-local"],
+			"group": "build",
+			"problemMatcher": ["$gcc"],
+			"detail": "Wipes the x86_64 build directory and rebuilds from scratch"
+		},
+
+		// ── ADB deploy ───────────────────────────────────────────────────────
+		{
+			"label": "ADB: install arm64",
+			"type": "shell",
+			"command": "adb",
+			"args": ["install", "-r", "${workspaceFolder}/InfiniTTT-arm64.apk"],
+			"group": "build",
+			"problemMatcher": [],
+			"detail": "Install the arm64 APK on a connected device via ADB (-r allows reinstall)"
+		},
+		{
+			"label": "ADB: install x86_64",
+			"type": "shell",
+			"command": "adb",
+			"args": ["install", "-r", "${workspaceFolder}/InfiniTTT-x86_64.apk"],
+			"group": "build",
+			"problemMatcher": [],
+			"detail": "Install the x86_64 APK on a connected emulator via ADB"
+		},
+
+		// ── Packaging ─────────────────────────────────────────────────────────
+		{
+			"label": "Package: DEB",
+			"type": "shell",
+			"command": "dpkg-buildpackage",
+			"args": ["-us", "-uc", "-b"],
+			"options": { "cwd": "${workspaceFolder}" },
+			"group": "build",
+			"problemMatcher": ["$gcc"],
+			"detail": "Builds the Debian package; output .deb lands in the parent directory"
+		},
+		{
+			"label": "Package: APK arm64",
+			"type": "shell",
+			"command": "/bin/sh",
+			"args": [
+				"-c",
+				"cmake --preset android-arm64-local && cmake --build --preset android-arm64-local && cp build-android-arm64/android-build/InfiniTTT_QML.apk InfiniTTT-arm64.apk && echo 'APK ready: InfiniTTT-arm64.apk'"
+			],
+			"options": { "cwd": "${workspaceFolder}" },
+			"group": "build",
+			"problemMatcher": ["$gcc"],
+			"detail": "Configures, builds, and copies the arm64 APK to the project root"
+		},
+		{
+			"label": "Package: APK x86_64",
+			"type": "shell",
+			"command": "/bin/sh",
+			"args": [
+				"-c",
+				"cmake --preset android-x86_64-local && cmake --build --preset android-x86_64-local && cp build-android-x86_64/android-build/InfiniTTT_QML.apk InfiniTTT-x86_64.apk && echo 'APK ready: InfiniTTT-x86_64.apk'"
+			],
+			"options": { "cwd": "${workspaceFolder}" },
+			"group": "build",
+			"problemMatcher": ["$gcc"],
+			"detail": "Configures, builds, and copies the x86_64 APK to the project root (emulator)"
+		}
+	]
+}
