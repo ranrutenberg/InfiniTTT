@@ -171,11 +171,17 @@ ApplicationWindow {
     RoundButton {
         anchors { top: parent.top; right: parent.right; margins: 12 }
         width: 44; height: 44
-        text: "☰"
-        font.pixelSize: 18
         Material.background: Material.Blue
-        Material.foreground: "white"
         onClicked: drawer.open()
+
+        contentItem: Column {
+            anchors.centerIn: parent
+            spacing: 4
+            Repeater {
+                model: 3
+                Rectangle { width: 18; height: 2; radius: 1; color: "white" }
+            }
+        }
     }
 
     // ── Side drawer ──────────────────────────────────────────────────────────
