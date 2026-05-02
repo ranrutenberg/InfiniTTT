@@ -269,8 +269,18 @@ void BoardItem::touchEvent(QTouchEvent* event) {
         } else if (pts.size() >= 2) {
             touchMoved_ = true;
             QPointF a = pts[0].position(), b = pts[1].position();
-            qreal dist   = QLineF(a, b).length();
+            qreal dist     = QLineF(a, b).length();
             QPointF center = (a + b) / 2.0;
+
+            // TouchBegin fires with only 1 point, so the pinch baseline is never
+            // set there. Initialise it here on the first TouchUpdate with 2 fingers.
+            if (activeTouchPoints_ < 2) {
+                activeTouchPoints_ = static_cast<int>(pts.size());
+                pinchStartDist_    = dist;
+                pinchStartCenter_  = center;
+                pinchStartZoom_    = zoom_;
+                pinchStartPan_     = {panX_, panY_};
+            }
 
             qreal newZoom = std::clamp(pinchStartZoom_ * dist / pinchStartDist_,
                                        MIN_ZOOM, MAX_ZOOM);
