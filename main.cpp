@@ -14,7 +14,8 @@
 #include "src/ai/aiplayer.h"       // Include the AIPlayer class
 #include "src/ai/smart_random_ai.h" // Include SmartRandomAI
 #include "src/ai/hybrid_evaluator_ai.h" // Include HybridEvaluatorAI
-#include "src/ai/hybrid_evaluator_ai_v2.h" // Include HybridEvaluatorAIv2 (Minimax)
+#include "src/ai/hybrid_evaluator_ai_v2.h"
+#include "src/ai/hybrid_evaluator_ai_v3.h"
 #include "weighttrainer.h"  // Include the weight training system
 #include "evaluationweights.h"  // Include evaluation weights
 
@@ -75,6 +76,8 @@ std::unique_ptr<AIPlayer> createAI(AIType type, const EvaluationWeights* weights
             return std::make_unique<HybridEvaluatorAI>(weights, verbose);
         case AIType::HYBRID_EVALUATOR_V2:
             return std::make_unique<HybridEvaluatorAIv2>(weights, depth, topN, true, debugMode, verbose);
+        case AIType::HYBRID_EVALUATOR_V3:
+            return std::make_unique<HybridEvaluatorAIv3>(weights, depth, topN, true, debugMode, verbose);
         default:
             return std::make_unique<SmartRandomAI>(smartRandomLevel, verbose);
     }
@@ -89,6 +92,8 @@ const char* getAITypeName(AIType type) {
             return "Hybrid Evaluator";
         case AIType::HYBRID_EVALUATOR_V2:
             return "Hybrid Evaluator v2 (Minimax)";
+        case AIType::HYBRID_EVALUATOR_V3:
+            return "Hybrid Evaluator v3 (open-4 fix)";
         default:
             return "Unknown";
     }
@@ -101,6 +106,8 @@ const char* getWeightFilename(AIType type) {
             return "hybrid_evaluator_weights.txt";
         case AIType::HYBRID_EVALUATOR_V2:
             return "hybrid_evaluator_v2_weights.txt";
+        case AIType::HYBRID_EVALUATOR_V3:
+            return "hybrid_evaluator_v3_weights.txt";
         default:
             return nullptr;  // AI type doesn't support weights
     }
@@ -193,8 +200,9 @@ AIType selectAIType(const std::string& playerName) {
     std::cout << "1. Smart Random (Random + Win Detection)\n";
     std::cout << "2. Hybrid Evaluator (Tactical + Strategic)\n";
     std::cout << "3. Hybrid Evaluator v2 (Minimax-enhanced)\n";
+    std::cout << "4. Hybrid Evaluator v3 (v2 + open-4 fix)\n";
 
-    int choice = readIntWithRetry("Enter choice (1-3): ", 1, 3);
+    int choice = readIntWithRetry("Enter choice (1-4): ", 1, 4);
 
     switch (choice) {
         case 1:
@@ -203,6 +211,8 @@ AIType selectAIType(const std::string& playerName) {
             return AIType::HYBRID_EVALUATOR;
         case 3:
             return AIType::HYBRID_EVALUATOR_V2;
+        case 4:
+            return AIType::HYBRID_EVALUATOR_V3;
         default:
             return AIType::SMART_RANDOM;  // Should never reach here
     }
@@ -288,6 +298,7 @@ void runBenchmark(int numGames, bool interactive, bool verbose = false, bool use
         std::cout << "Loading trained weights...\n";
         aiWeights[AIType::HYBRID_EVALUATOR] = loadWeightsForAI(AIType::HYBRID_EVALUATOR);
         aiWeights[AIType::HYBRID_EVALUATOR_V2] = loadWeightsForAI(AIType::HYBRID_EVALUATOR_V2);
+        aiWeights[AIType::HYBRID_EVALUATOR_V3] = loadWeightsForAI(AIType::HYBRID_EVALUATOR_V3);
         std::cout << "\n";
     }
 
@@ -311,8 +322,8 @@ void runBenchmark(int numGames, bool interactive, bool verbose = false, bool use
         }
     } else {
         // Run all matchups
-        AIType aiTypes[] = {AIType::SMART_RANDOM, AIType::HYBRID_EVALUATOR, AIType::HYBRID_EVALUATOR_V2};
-        int numTypes = 3;
+        AIType aiTypes[] = {AIType::SMART_RANDOM, AIType::HYBRID_EVALUATOR, AIType::HYBRID_EVALUATOR_V2, AIType::HYBRID_EVALUATOR_V3};
+        int numTypes = 4;
 
         std::cout << "\nRunning comprehensive benchmark (all AI matchups)...\n";
         std::cout << "Running " << numGames << " games for each matchup...\n\n";
@@ -449,8 +460,9 @@ void runInteractiveGame(bool verbose = false, bool useTrainedWeights = false, bo
     std::cout << "2. Smart Random AI\n";
     std::cout << "3. Hybrid Evaluator AI\n";
     std::cout << "4. Hybrid Evaluator v2 AI (Minimax)\n";
+    std::cout << "5. Hybrid Evaluator v3 AI (v2 + open-4 fix)\n";
 
-    int p1Choice = readIntWithRetry("Enter choice (1-4): ", 1, 4);
+    int p1Choice = readIntWithRetry("Enter choice (1-5): ", 1, 5);
 
     PlayerType player1Type;
     AIType ai1Type = AIType::SMART_RANDOM;  // Default
@@ -475,6 +487,10 @@ void runInteractiveGame(bool verbose = false, bool useTrainedWeights = false, bo
             player1Type = PlayerType::AI;
             ai1Type = AIType::HYBRID_EVALUATOR_V2;
             break;
+        case 5:
+            player1Type = PlayerType::AI;
+            ai1Type = AIType::HYBRID_EVALUATOR_V3;
+            break;
         default:
             player1Type = PlayerType::HUMAN;  // Should never reach here
     }
@@ -485,8 +501,9 @@ void runInteractiveGame(bool verbose = false, bool useTrainedWeights = false, bo
     std::cout << "2. Smart Random AI\n";
     std::cout << "3. Hybrid Evaluator AI\n";
     std::cout << "4. Hybrid Evaluator v2 AI (Minimax)\n";
+    std::cout << "5. Hybrid Evaluator v3 AI (v2 + open-4 fix)\n";
 
-    int p2Choice = readIntWithRetry("Enter choice (1-4): ", 1, 4);
+    int p2Choice = readIntWithRetry("Enter choice (1-5): ", 1, 5);
 
     PlayerType player2Type;
     AIType ai2Type = AIType::SMART_RANDOM;  // Default
@@ -507,6 +524,10 @@ void runInteractiveGame(bool verbose = false, bool useTrainedWeights = false, bo
         case 4:
             player2Type = PlayerType::AI;
             ai2Type = AIType::HYBRID_EVALUATOR_V2;
+            break;
+        case 5:
+            player2Type = PlayerType::AI;
+            ai2Type = AIType::HYBRID_EVALUATOR_V3;
             break;
         default:
             player2Type = PlayerType::HUMAN;  // Should never reach here
@@ -691,14 +712,16 @@ int main(int argc, char* argv[]) {
             "  --benchmark --all [N]    Full benchmark — every AI combination, N games each\n"
             "\n"
             "TRAIN OPTIONS\n"
-            "  --model v1|v2            Model to train (default: v1)\n"
+            "  --model v1|v2|v3         Model to train (default: v1)\n"
             "                             v1  Hybrid Evaluator → hybrid_evaluator_weights.txt\n"
             "                             v2  Hybrid Evaluator v2 → hybrid_evaluator_v2_weights.txt\n"
+            "                             v3  Hybrid Evaluator v3 → hybrid_evaluator_v3_weights.txt\n"
             "  --output <file>          Save weights to a custom path instead of the default\n"
             "\n"
             "OPTIONS\n"
-            "  --use-trained-weights    Load weights from hybrid_evaluator_weights.txt\n"
-            "                           and hybrid_evaluator_v2_weights.txt\n"
+            "  --use-trained-weights    Load weights from hybrid_evaluator_weights.txt,\n"
+            "                           hybrid_evaluator_v2_weights.txt, and\n"
+            "                           hybrid_evaluator_v3_weights.txt\n"
             "  --verbose                Print AI move evaluations during play\n"
             "  --debug                  Verify v2 incremental eval matches full eval (slow)\n"
             "  -h, --help               Show this help\n"
@@ -707,6 +730,7 @@ int main(int argc, char* argv[]) {
             "  1. Smart Random          Random play with configurable win/block/fork levels\n"
             "  2. Hybrid Evaluator      Position scoring with tactical priority rules\n"
             "  3. Hybrid Evaluator v2   Hybrid Evaluator + minimax lookahead (depth 2)\n"
+            "  4. Hybrid Evaluator v3   v2 + open-4 double-threat creation (Priority 2.2)\n"
             "\n"
             "EXAMPLES\n"
             "  InfiniTTT_CLI\n"
@@ -733,8 +757,9 @@ int main(int argc, char* argv[]) {
             if (arg == "--model" && i + 1 < argc) {
                 std::string model(argv[++i]);
                 if (model == "v2")      trainAIType = AIType::HYBRID_EVALUATOR_V2;
+                else if (model == "v3") trainAIType = AIType::HYBRID_EVALUATOR_V3;
                 else if (model == "v1") trainAIType = AIType::HYBRID_EVALUATOR;
-                else { std::cerr << "Error: Unknown model '" << model << "'. Use v1 or v2.\n"; return 1; }
+                else { std::cerr << "Error: Unknown model '" << model << "'. Use v1, v2, or v3.\n"; return 1; }
             } else if (arg == "--output" && i + 1 < argc) {
                 outputPath = argv[++i];
             } else if (!arg.empty() && arg[0] != '-') {

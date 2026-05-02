@@ -1,4 +1,4 @@
-// Hybrid Evaluator AI v2 - Minimax-enhanced version with incremental evaluation
+// Hybrid Evaluator AI v3 - Minimax-enhanced version with incremental evaluation
 // SPDX-FileCopyrightText: 2024 Ran Rutenberg <ran.rutenberg@gmail.com>
 // SPDX-License-Identifier: GPL-3.0-only
 
@@ -12,18 +12,22 @@
 class EvaluationWeights;
 class TicTacToeBoard;
 
-// Hybrid Evaluator AI v2 - Extends v1 with minimax search and incremental evaluation
+// Hybrid Evaluator AI v3 - v2 with open-4 double-threat creation fix
 // Features:
 // - Incremental position evaluation (only affected 11x11 area around moves)
 // - In-place minimax with undo (no board copies during search)
 // - Top-N move pruning for opponent simulation
 // - Configurable search depth (default: 2 = our move + opponent response)
 //
-// Priority system (same as v1):
-// 1. Take winning moves
-// 2. Block opponent winning moves
-// 3. Use minimax to evaluate remaining moves
-class HybridEvaluatorAIv2 : public AIPlayer {
+// Priority system (v3 adds Priority 2.2 vs v2):
+// 1.   Take winning moves
+// 2.   Block opponent winning moves
+// 2.2  Create an open-4 double threat for ourselves (_XXXX_ guarantees win next move)
+// 2.3  Block opponent from creating an open-4
+// 2.5  Create a second-order double threat (double open-3 fork)
+// 2.7  Block opponent second-order double threat
+// 3.   Minimax evaluation
+class HybridEvaluatorAIv3 : public AIPlayer {
 private:
     std::set<std::pair<int, int>> availableMoves;  // Maintained internally by AI
     const EvaluationWeights* weights;  // Optional custom weights
@@ -79,7 +83,7 @@ public:
     // useAlphaBeta: Enable alpha-beta pruning (recommended)
     // debugMode: Enable verification of incremental vs full evaluation
     // verbose: Enable verbose output
-    HybridEvaluatorAIv2(const EvaluationWeights* w = nullptr,
+    HybridEvaluatorAIv3(const EvaluationWeights* w = nullptr,
                         int depth = 2,
                         int topN = 10,
                         bool useAlphaBeta = true,

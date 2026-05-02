@@ -10,6 +10,14 @@
 
 class TicTacToeBoard;
 
+// Move with its evaluated score — shared by HybridEvaluatorAI v2 and v3
+struct MoveScore {
+    std::pair<int, int> move;
+    int score;
+    int ourScore;
+    int oppScore;
+};
+
 namespace AIUtils {
     // Compute all valid adjacent moves from scratch
     // Used during minimax recursion where we don't maintain state

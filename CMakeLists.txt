@@ -18,6 +18,7 @@ add_library(infinittt_core STATIC
     src/ai/smart_random_ai.cpp
     src/ai/hybrid_evaluator_ai.cpp
     src/ai/hybrid_evaluator_ai_v2.cpp
+    src/ai/hybrid_evaluator_ai_v3.cpp
 )
 target_include_directories(infinittt_core PUBLIC
     ${CMAKE_SOURCE_DIR}
@@ -78,6 +79,7 @@ if(ANDROID)
         QT_ANDROID_TARGET_SDK_VERSION 36
         QT_ANDROID_VERSION_CODE 2
         QT_ANDROID_VERSION_NAME "1.0.0"
+        QT_ANDROID_GRADLE_INIT_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/android/signing.gradle"
     )
 else()
     if(WIN32)
