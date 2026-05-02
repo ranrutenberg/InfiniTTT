@@ -603,17 +603,21 @@ void runInteractiveGame(bool verbose = false, bool useTrainedWeights = false, bo
 }
 
 // Run weight training mode
-void runTraining(int generations, int populationSize, int gamesPerMatchup) {
+void runTraining(int generations, int populationSize, int gamesPerMatchup,
+                 AIType aiType, const std::string& outputPath) {
     std::cout << "=== AI Weight Training Mode ===\n";
-    std::cout << "Training: Hybrid Evaluator\n\n";
+    std::cout << "Training: " << getAITypeName(aiType) << "\n\n";
     std::cout << "Configuration:\n";
     std::cout << "  Generations: " << generations << "\n";
     std::cout << "  Population size: " << populationSize << "\n";
     std::cout << "  Games per matchup: " << gamesPerMatchup << "\n";
     std::cout << "  Estimated total games: " << (populationSize * (populationSize - 1) / 2 * gamesPerMatchup * generations) << "\n\n";
 
-    AIType aiType = AIType::HYBRID_EVALUATOR;
-    const char* weightFilename = getWeightFilename(aiType);
+    // Resolve output file path
+    std::string weightFilename = outputPath.empty()
+        ? getWeightFilename(aiType)
+        : outputPath;
+    std::cout << "  Output file: " << weightFilename << "\n\n";
 
     // Try to load existing weights as starting point
     EvaluationWeights startingWeights;
@@ -637,7 +641,7 @@ void runTraining(int generations, int populationSize, int gamesPerMatchup) {
         std::cout << "\nError: Could not save weights to " << weightFilename << "\n";
     }
 
-    std::cout << "\nUse with: ./InfiniTTT --use-trained-weights\n";
+    std::cout << "\nUse with: InfiniTTT_CLI --use-trained-weights\n";
 }
 
 int main(int argc, char* argv[]) {
@@ -679,12 +683,18 @@ int main(int argc, char* argv[]) {
             "\n"
             "MODES\n"
             "  (none)                   Interactive game — choose player types at startup\n"
-            "  --train [G] [P] [N]      Train Hybrid Evaluator weights (genetic algorithm)\n"
+            "  --train [G] [P] [N]      Train AI weights via genetic algorithm\n"
             "                             G  generations        (default: 10)\n"
             "                             P  population size    (default: 20)\n"
             "                             N  games per matchup  (default: 6)\n"
             "  --benchmark [N]          Interactive benchmark — pick two AIs, run N games\n"
             "  --benchmark --all [N]    Full benchmark — every AI combination, N games each\n"
+            "\n"
+            "TRAIN OPTIONS\n"
+            "  --model v1|v2            Model to train (default: v1)\n"
+            "                             v1  Hybrid Evaluator → hybrid_evaluator_weights.txt\n"
+            "                             v2  Hybrid Evaluator v2 → hybrid_evaluator_v2_weights.txt\n"
+            "  --output <file>          Save weights to a custom path instead of the default\n"
             "\n"
             "OPTIONS\n"
             "  --use-trained-weights    Load weights from hybrid_evaluator_weights.txt\n"
@@ -702,28 +712,46 @@ int main(int argc, char* argv[]) {
             "  InfiniTTT_CLI\n"
             "  InfiniTTT_CLI --benchmark --all 100 --use-trained-weights\n"
             "  InfiniTTT_CLI --train 20 30 10\n"
+            "  InfiniTTT_CLI --train 20 30 10 --model v2\n"
+            "  InfiniTTT_CLI --train 10 20 6 --output /tmp/my_weights.txt\n"
             "  InfiniTTT_CLI --verbose --use-trained-weights\n";
         return 0;
     }
 
     // Check for training mode
     if (argc > 1 && std::string(argv[1]) == "--train") {
-        int generations = 10;  // Default
-        int populationSize = 20;  // Default
-        int gamesPerMatchup = 6;  // Default - higher than 2 to reduce random effects
+        int generations = 10;
+        int populationSize = 20;
+        int gamesPerMatchup = 6;
+        AIType trainAIType = AIType::HYBRID_EVALUATOR;
+        std::string outputPath;
 
-        // Parse numeric arguments starting at argv[2]
-        if (argc > 2) generations = std::atoi(argv[2]);
-        if (argc > 3) populationSize = std::atoi(argv[3]);
-        if (argc > 4) gamesPerMatchup = std::atoi(argv[4]);
+        // Parse positional args (G P N) and named flags mixed together
+        int positional = 0;
+        for (int i = 2; i < argc; ++i) {
+            std::string arg(argv[i]);
+            if (arg == "--model" && i + 1 < argc) {
+                std::string model(argv[++i]);
+                if (model == "v2")      trainAIType = AIType::HYBRID_EVALUATOR_V2;
+                else if (model == "v1") trainAIType = AIType::HYBRID_EVALUATOR;
+                else { std::cerr << "Error: Unknown model '" << model << "'. Use v1 or v2.\n"; return 1; }
+            } else if (arg == "--output" && i + 1 < argc) {
+                outputPath = argv[++i];
+            } else if (!arg.empty() && arg[0] != '-') {
+                switch (positional++) {
+                    case 0: generations     = std::atoi(argv[i]); break;
+                    case 1: populationSize  = std::atoi(argv[i]); break;
+                    case 2: gamesPerMatchup = std::atoi(argv[i]); break;
+                }
+            }
+        }
 
-        // Validate parameters
         if (generations < 1 || populationSize < 2 || gamesPerMatchup < 1) {
             std::cerr << "Error: Invalid parameters. Use --help for usage.\n";
             return 1;
         }
 
-        runTraining(generations, populationSize, gamesPerMatchup);
+        runTraining(generations, populationSize, gamesPerMatchup, trainAIType, outputPath);
         return 0;
     }
 

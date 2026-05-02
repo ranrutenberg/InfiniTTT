@@ -5,6 +5,7 @@
 
 #include "weighttrainer.h"
 #include "src/ai/hybrid_evaluator_ai.h"
+#include "src/ai/hybrid_evaluator_ai_v2.h"
 #include <iostream>
 #include <algorithm>
 #include <atomic>
@@ -16,6 +17,8 @@ std::unique_ptr<AIPlayer> WeightTrainer::createTrainingAI(const EvaluationWeight
     switch (trainingAIType) {
         case AIType::HYBRID_EVALUATOR:
             return std::make_unique<HybridEvaluatorAI>(&weights);
+        case AIType::HYBRID_EVALUATOR_V2:
+            return std::make_unique<HybridEvaluatorAIv2>(&weights);
         default:
             std::cerr << "Error: AI type does not support weight training\n";
             return std::make_unique<HybridEvaluatorAI>(&weights);
