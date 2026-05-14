@@ -51,8 +51,10 @@ public:
     // Weight file configuration
     void setHybridEvaluatorWeightsPath(const QString& path);
     void setHybridEvaluatorV2WeightsPath(const QString& path);
+    void setHybridEvaluatorV3WeightsPath(const QString& path);
     QString getHybridEvaluatorWeightsPath() const { return hybridWeightsPath_; }
     QString getHybridEvaluatorV2WeightsPath() const { return hybridV2WeightsPath_; }
+    QString getHybridEvaluatorV3WeightsPath() const { return hybridV3WeightsPath_; }
 
 signals:
     void moveExecuted(int x, int y, char mark);
@@ -93,4 +95,5 @@ private:
     // Weight files are always loaded from bundled Qt resources
     QString hybridWeightsPath_   = ":/weights/hybrid_evaluator_weights.txt";
     QString hybridV2WeightsPath_ = ":/weights/hybrid_evaluator_v2_weights.txt";
+    QString hybridV3WeightsPath_ = ":/weights/hybrid_evaluator_v3_weights.txt";
 };

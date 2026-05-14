@@ -16,14 +16,16 @@ Popup {
     signal gameStarted(bool p1Human, int p1AI, int p1Lvl,
                        bool p2Human, int p2AI, int p2Lvl)
 
+    property bool gameActive: false
+
     // Persisted selections (survive dialog close/reopen)
     QtObject {
         id: saved
         property int p1Type:  0   // 0=Human, 1=AI
-        property int p1AI:    1   // 0=SmartRandom, 1=Hybrid, 2=HybridV2
+        property int p1AI:    3   // 0=SmartRandom, 1=Hybrid, 2=HybridV2, 3=HybridV3
         property int p1Level: 2
         property int p2Type:  1
-        property int p2AI:    1
+        property int p2AI:    3
         property int p2Level: 2
     }
 
@@ -115,6 +117,15 @@ Popup {
                 )
             }
         }
+
+        Button {
+            Layout.fillWidth: true
+            Layout.leftMargin: 12; Layout.rightMargin: 12; Layout.bottomMargin: 12
+            visible: root.gameActive
+            text: "Cancel"
+            flat: true
+            onClicked: root.close()
+        }
     }
 
     // ── Inline PlayerPanel component ─────────────────────────────────────────
@@ -154,7 +165,7 @@ Popup {
             ComboBox {
                 id: aiCombo
                 Layout.fillWidth: true
-                model: ["Smart Random", "Hybrid Evaluator", "Hybrid v2 (Minimax)"]
+                model: ["Smart Random", "Hybrid Evaluator", "Hybrid v2 (Minimax)", "Hybrid v3 (Open-4)"]
                 currentIndex: parent.parent.aiIndex
                 onCurrentIndexChanged: parent.parent.aiIndex = currentIndex
                 font.pixelSize: 13

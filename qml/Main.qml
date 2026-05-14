@@ -215,6 +215,7 @@ ApplicationWindow {
     // ── Dialogs ──────────────────────────────────────────────────────────────
     GameSetupDialog {
         id: setupDialog
+        gameActive: root.gameActive
         onGameStarted: (p1Human, p1AI, p1Lvl, p2Human, p2AI, p2Lvl) => {
             aiLogModel.clear()
             board.clearBoard()

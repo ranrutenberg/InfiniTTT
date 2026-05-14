@@ -30,4 +30,5 @@ public:
     void placeMarkDirect(int x, int y, char mark) { board[{x, y}] = mark; }
     void removeMarkDirect(int x, int y) { board.erase({x, y}); }
     char getCurrentPlayer() const { return currentPlayer; }
+    void setCurrentPlayer(char player) { currentPlayer = player; }
 };

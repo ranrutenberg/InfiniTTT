@@ -6,6 +6,7 @@
 #include "smart_random_ai.h"
 #include "hybrid_evaluator_ai.h"
 #include "hybrid_evaluator_ai_v2.h"
+#include "hybrid_evaluator_ai_v3.h"
 #include <string>
 #include <QFile>
 
@@ -45,6 +46,10 @@ void GameController::setHybridEvaluatorWeightsPath(const QString& path) {
 
 void GameController::setHybridEvaluatorV2WeightsPath(const QString& path) {
     hybridV2WeightsPath_ = path;
+}
+
+void GameController::setHybridEvaluatorV3WeightsPath(const QString& path) {
+    hybridV3WeightsPath_ = path;
 }
 
 void GameController::startNewGame(const GameConfig& config) {
@@ -150,6 +155,7 @@ void GameController::undoMove() {
     board_.removeMarkDirect(x, y);
     moveCount_--;
     currentPlayer_ = mark;  // restore to the player who just moved
+    board_.setCurrentPlayer(currentPlayer_);  // sync board's internal turn state
     gameActive_ = true;
 
     // update lastMove_ to the new last move
@@ -201,6 +207,8 @@ std::unique_ptr<AIPlayer> GameController::createAIPlayer(const PlayerConfig& pla
             return std::make_unique<HybridEvaluatorAI>(weights, false);
         case AIType::HYBRID_EVALUATOR_V2:
             return std::make_unique<HybridEvaluatorAIv2>(weights, 2, 10, true, false, false);
+        case AIType::HYBRID_EVALUATOR_V3:
+            return std::make_unique<HybridEvaluatorAIv3>(weights, 2, 10, true, false, false);
         default:
             return std::make_unique<SmartRandomAI>(playerConfig.smartRandomLevel, false);
     }
@@ -212,6 +220,8 @@ QString GameController::getWeightFilename(AIType type) const {
             return hybridWeightsPath_;
         case AIType::HYBRID_EVALUATOR_V2:
             return hybridV2WeightsPath_;
+        case AIType::HYBRID_EVALUATOR_V3:
+            return hybridV3WeightsPath_;
         default:
             return QString();
     }

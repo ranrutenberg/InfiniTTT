@@ -23,9 +23,21 @@
       }
     },
     {
+      "name": "android-signing",
+      "hidden": true,
+      "cacheVariables": {
+        "QT_ANDROID_SIGN_APK": "ON",
+        "QT_ANDROID_KEYSTORE_PATH": "$env{HOME}/.android/debug.keystore",
+        "QT_ANDROID_KEYSTORE_ALIAS": "androiddebugkey",
+        "QT_ANDROID_KEYSTORE_STORE_PASS": "android",
+        "QT_ANDROID_KEYSTORE_KEY_PASS": "android"
+      }
+    },
+    {
       "name": "android-arm64",
       "displayName": "Android arm64-v8a (Release)",
       "description": "Requires QTDIR, ANDROID_SDK_ROOT, and ANDROID_NDK_ROOT env vars",
+      "inherits": "android-signing",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build-android-arm64",
       "toolchainFile": "$env{QTDIR}/lib/cmake/Qt6/qt.toolchain.cmake",
@@ -41,6 +53,7 @@
       "name": "android-arm",
       "displayName": "Android armv7 (Release)",
       "description": "Requires QTDIR_ARM, ANDROID_SDK_ROOT, and ANDROID_NDK_ROOT env vars",
+      "inherits": "android-signing",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build-android-arm",
       "toolchainFile": "$env{QTDIR_ARM}/lib/cmake/Qt6/qt.toolchain.cmake",
@@ -56,6 +69,7 @@
       "name": "android-x86_64",
       "displayName": "Android x86_64 (Release) — for emulator testing",
       "description": "Requires QTDIR_X86_64, ANDROID_SDK_ROOT, and ANDROID_NDK_ROOT env vars",
+      "inherits": "android-signing",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build-android-x86_64",
       "toolchainFile": "$env{QTDIR_X86_64}/lib/cmake/Qt6/qt.toolchain.cmake",

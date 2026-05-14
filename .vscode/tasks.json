@@ -43,6 +43,14 @@
 			"type": "shell",
 			"command": "/bin/sh",
 			"args": ["-c", "rm -rf '${workspaceFolder}/build-android-arm64' && cmake --preset android-arm64-local && cmake --build --preset android-arm64-local"],
+			"options": {
+				"env": {
+					"QT_ANDROID_KEYSTORE_PATH": "${env:HOME}/.android/debug.keystore",
+					"QT_ANDROID_KEYSTORE_ALIAS": "androiddebugkey",
+					"QT_ANDROID_KEYSTORE_STORE_PASS": "android",
+					"QT_ANDROID_KEYSTORE_KEY_PASS": "android"
+				}
+			},
 			"group": "build",
 			"problemMatcher": ["$gcc"],
 			"detail": "Wipes the arm64 build directory and rebuilds from scratch"
@@ -52,6 +60,14 @@
 			"type": "shell",
 			"command": "/bin/sh",
 			"args": ["-c", "rm -rf '${workspaceFolder}/build-android-x86_64' && cmake --preset android-x86_64-local && cmake --build --preset android-x86_64-local"],
+			"options": {
+				"env": {
+					"QT_ANDROID_KEYSTORE_PATH": "${env:HOME}/.android/debug.keystore",
+					"QT_ANDROID_KEYSTORE_ALIAS": "androiddebugkey",
+					"QT_ANDROID_KEYSTORE_STORE_PASS": "android",
+					"QT_ANDROID_KEYSTORE_KEY_PASS": "android"
+				}
+			},
 			"group": "build",
 			"problemMatcher": ["$gcc"],
 			"detail": "Wipes the x86_64 build directory and rebuilds from scratch"
@@ -96,7 +112,15 @@
 				"-c",
 				"cmake --preset android-arm64-local && cmake --build --preset android-arm64-local && cp build-android-arm64/android-build/InfiniTTT_QML.apk InfiniTTT-arm64.apk && echo 'APK ready: InfiniTTT-arm64.apk'"
 			],
-			"options": { "cwd": "${workspaceFolder}" },
+			"options": {
+				"cwd": "${workspaceFolder}",
+				"env": {
+					"QT_ANDROID_KEYSTORE_PATH": "${env:HOME}/.android/debug.keystore",
+					"QT_ANDROID_KEYSTORE_ALIAS": "androiddebugkey",
+					"QT_ANDROID_KEYSTORE_STORE_PASS": "android",
+					"QT_ANDROID_KEYSTORE_KEY_PASS": "android"
+				}
+			},
 			"group": "build",
 			"problemMatcher": ["$gcc"],
 			"detail": "Configures, builds, and copies the arm64 APK to the project root"
@@ -109,7 +133,15 @@
 				"-c",
 				"cmake --preset android-x86_64-local && cmake --build --preset android-x86_64-local && cp build-android-x86_64/android-build/InfiniTTT_QML.apk InfiniTTT-x86_64.apk && echo 'APK ready: InfiniTTT-x86_64.apk'"
 			],
-			"options": { "cwd": "${workspaceFolder}" },
+			"options": {
+				"cwd": "${workspaceFolder}",
+				"env": {
+					"QT_ANDROID_KEYSTORE_PATH": "${env:HOME}/.android/debug.keystore",
+					"QT_ANDROID_KEYSTORE_ALIAS": "androiddebugkey",
+					"QT_ANDROID_KEYSTORE_STORE_PASS": "android",
+					"QT_ANDROID_KEYSTORE_KEY_PASS": "android"
+				}
+			},
 			"group": "build",
 			"problemMatcher": ["$gcc"],
 			"detail": "Configures, builds, and copies the x86_64 APK to the project root (emulator)"
