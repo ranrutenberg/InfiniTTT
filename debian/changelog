@@ -1,3 +1,12 @@
+infinittt (0.3.0-1) unstable; urgency=medium
+
+  * Add Hybrid Evaluator v3 (Open-4 double-threat) to GUI and set as default AI
+  * Fix undo move bug: no longer declares wrong winner after blocking move
+  * Add Cancel button to New Game dialog when a game is in progress
+  * Fix Android APK signing via Qt native mechanism
+
+ -- Ran Rutenberg <ran.rutenberg@gmail.com>  Wed, 14 May 2025 00:00:00 +0000
+
 infinittt (0.2.0-1) unstable; urgency=medium
 
   * Move counter in status bar showing current move number
